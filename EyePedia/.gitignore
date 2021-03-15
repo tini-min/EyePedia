@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+gazetracker-release/
+libgaze-release/
