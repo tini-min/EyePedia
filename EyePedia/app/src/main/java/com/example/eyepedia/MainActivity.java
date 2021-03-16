@@ -9,6 +9,7 @@ import android.os.Bundle;
 import com.example.eyepedia.view.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.PointView;
+import com.google.android.material.appbar.AppBarLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -207,10 +208,10 @@ public class MainActivity extends AppCompatActivity {
     private View layoutProgress;
     private View viewWarningTracking;
     private PointView viewPoint;
-    private Button btnInitGaze;
     private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
     private CalibrationViewer viewCalibration;
     private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
+    private AppBarLayout menuBar;
     // gaze coord filter
     private boolean isUseGazeFilter = true;
 
@@ -221,9 +222,6 @@ public class MainActivity extends AppCompatActivity {
         preview = findViewById(R.id.preview);
         preview.setSurfaceTextureListener(surfaceTextureListener);
 
-        btnInitGaze = findViewById(R.id.btn_init_gaze);
-        btnInitGaze.setOnClickListener(onClickListener);
-
         btnStartCalibration = findViewById(R.id.btn_start_calibration);
         btnStopCalibration = findViewById(R.id.btn_stop_calibration);
         btnStartCalibration.setOnClickListener(onClickListener);
@@ -233,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
 
         viewPoint = findViewById(R.id.view_point);
         viewCalibration = findViewById(R.id.view_calibration);
+        menuBar = findViewById(R.id.menu_bar);
 
         setOffsetOfView();
     }
@@ -299,9 +298,7 @@ public class MainActivity extends AppCompatActivity {
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (v == btnInitGaze) {
-                initGaze();
-            } else if (v == btnStartCalibration) {
+             if (v == btnStartCalibration) {
                 startCalibration();
             } else if (v == btnStopCalibration) {
                 stopCalibration();
@@ -336,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 viewCalibration.setVisibility(View.VISIBLE);
+                menuBar.setVisibility(View.INVISIBLE);
                 viewCalibration.changeDraw(true, null);
                 viewCalibration.setPointPosition(x, y);
                 viewCalibration.setPointAnimationPower(0);
@@ -357,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 viewCalibration.setVisibility(View.INVISIBLE);
+                menuBar.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -366,7 +365,6 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                btnInitGaze.setEnabled(!isGazeNonNull());
                 btnStartCalibration.setEnabled(isGazeNonNull() && isTracking());
                 btnStopCalibration.setEnabled(isGazeNonNull() && isTracking());
                 btnSetCalibration.setEnabled(isGazeNonNull());
