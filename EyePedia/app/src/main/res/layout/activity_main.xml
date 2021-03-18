@@ -61,7 +61,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="설정 삭제" />
+
+            <Button
+                android:text="파일읽기"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="mOnFileRead"/>
+
+            <TextView
+                android:id="@+id/txtRead"
+                android:layout_width="match_parent"
+                android:layout_height="51dp"
+                android:text="TextView"
+                tools:layout_editor_absoluteX="179dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+
         </LinearLayout>
+
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 시선 좌표 -->
@@ -76,6 +95,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <include layout="@layout/layout_progress"/>
+    <include
+        layout="@layout/layout_progress"
+        app:layout_anchor="@+id/preview"
+        app:layout_anchorGravity="center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
