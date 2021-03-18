@@ -6,13 +6,44 @@
     android:layout_height="match_parent"
     tools:context=".SettingActivity">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:text="Button"
+        android:orientation="vertical"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/btn_start_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_margin="20dp"
+            android:text="정확도 향상" />
+
+        <Button
+            android:id="@+id/btn_set_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_margin="20dp"
+            android:text="설정 저장" />
+
+        <Button
+            android:id="@+id/btn_stop_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_margin="20dp"
+            android:text="설정 삭제" />
+    </LinearLayout>
+
+    <!-- 캘리브레이션 뷰 -->
+    <com.example.eyepedia.view.CalibrationViewer
+        android:id="@+id/view_calibration"
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

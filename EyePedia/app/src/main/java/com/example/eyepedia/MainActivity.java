@@ -17,6 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.solver.widgets.ConstraintTableLayout;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import android.os.Handler;
@@ -83,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
-    private TextView textView= (TextView) findViewById(R.id.textView);
+    private TextView textView;
+    private ConstraintLayout constraintLayout;
+    private Button btn;
     final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
 
     @Override
@@ -99,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        textView = findViewById(R.id.textView);
+        constraintLayout = findViewById((R.id.layout));
         Spannable spannable = (Spannable) textView.getText();
         String content = textView.getText().toString(); Log.i(TAG, content);
         String[] strArray = content.split("\\."); Log.i(TAG, Arrays.toString(strArray));
@@ -106,48 +112,37 @@ public class MainActivity extends AppCompatActivity {
         for(String str : strArray) { indArray.add(content.indexOf(str)); }
         indArray.add(content.length());
 
+        // Obtain MotionEvent object
+        long downTime = SystemClock.uptimeMillis();
+        long eventTime = SystemClock.uptimeMillis() + 100;
+//        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
+//        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
+        float x = 800.0f;
+        float y = 500.0f;
+        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
+        int metaState = 0;
+        //MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState);
+
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         for(int i = 0; i < indArray.size() - 1; i++) {
             int finalI = i;
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    showToast(indArray.get(finalI).toString(), false);
+                    //textView.dispatchTouchEvent(motionEvent);
+                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
                 }
             }, indArray.get(finalI), indArray.get(finalI + 1) - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
-        textView.setOnTouchListener(new View.OnTouchListener() {
+        btn = (Button) findViewById(R.id.button);
+        btn.setOnClickListener(new Button.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction()==MotionEvent.ACTION_DOWN) {
-                    Log.i(TAG, "Touch 완료");
-                }
-
-                return true;
+            public void onClick(View v) {
+                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
+                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
             }
         });
-
-        // Obtain MotionEvent object
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis() + 100;
-//        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
-//        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
-        float x = 200.0f;
-        float y = 850.0f;
-        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
-        int metaState = 0;
-        MotionEvent motionEvent = MotionEvent.obtain(
-                downTime,
-                eventTime,
-                MotionEvent.ACTION_UP,
-                x,
-                y,
-                metaState
-        );
-
-        // Dispatch touch event to view
-        textView.dispatchTouchEvent(motionEvent);
     }
     public void mOnFileRead(View v){
         String read = ReadTextFile(filePath);
@@ -310,10 +305,7 @@ public class MainActivity extends AppCompatActivity {
     //view
     private View layoutProgress;
     private PointView viewPoint;
-    private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
-    private CalibrationViewer viewCalibration;
-    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
-    private AppBarLayout menuBar;
+//    private AppBarLayout menuBar;
     // gaze coord filter
     private boolean isUseGazeFilter = true;
 
@@ -321,16 +313,9 @@ public class MainActivity extends AppCompatActivity {
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
 
-        btnStartCalibration = findViewById(R.id.btn_start_calibration);
-        btnStopCalibration = findViewById(R.id.btn_stop_calibration);
-        btnStartCalibration.setOnClickListener(onClickListener);
-        btnStopCalibration.setOnClickListener(onClickListener);
-        btnSetCalibration = findViewById(R.id.btn_set_calibration);
-        btnSetCalibration.setOnClickListener(onClickListener);
-
         viewPoint = findViewById(R.id.view_point);
-        viewCalibration = findViewById(R.id.view_calibration);
-        menuBar = findViewById(R.id.menu_bar);
+//        viewCalibration = findViewById(R.id.view_calibration);
+//        menuBar = findViewById(R.id.menu_bar);
 
         setOffsetOfView();
     }
@@ -343,7 +328,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void getOffset(int x, int y) {
                 viewPoint.setOffset(x, y);
-                viewCalibration.setOffset(x, y);
             }
         });
     }
@@ -370,19 +354,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (v == btnStartCalibration) {
-                startCalibration();
-            } else if (v == btnStopCalibration) {
-                stopCalibration();
-            } else if (v == btnSetCalibration) {
-                setCalibration();
-            }
-        }
-    };
-
     private void showToast(final String msg, final boolean isShort) {
         runOnUiThread(new Runnable() {
             @Override
@@ -402,54 +373,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    private void setCalibrationPoint(final float x, final float y) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setVisibility(View.VISIBLE);
-                menuBar.setVisibility(View.INVISIBLE);
-                viewCalibration.changeDraw(true, null);
-                viewCalibration.setPointPosition(x, y);
-                viewCalibration.setPointAnimationPower(0);
-            }
-        });
-    }
-
-    private void setCalibrationProgress(final float progress) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setPointAnimationPower(progress);
-            }
-        });
-    }
-
-    private void hideCalibrationView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setVisibility(View.INVISIBLE);
-                menuBar.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    private void setViewAtGazeTrackerState() {
-//        Log.i(TAG, "gaze : " + isGazeNonNull() + ", tracking " + isTracking());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                btnStartCalibration.setEnabled(isGazeNonNull() && isTracking());
-                btnStopCalibration.setEnabled(isGazeNonNull() && isTracking());
-                btnSetCalibration.setEnabled(isGazeNonNull());
-                if (!isTracking()) {
-                    hideCalibrationView();
-                }
-            }
-        });
-    }
-
     // view end
 
     // gazeTracker
@@ -473,6 +396,17 @@ public class MainActivity extends AppCompatActivity {
                 initFail(error);
             }
         }
+    };
+
+    private CalibrationCallback calibrationCallback = new CalibrationCallback() {
+        @Override
+        public void onCalibrationProgress(float v) { }
+
+        @Override
+        public void onCalibrationNextPoint(float v, float v1) { }
+
+        @Override
+        public void onCalibrationFinished(double[] doubles) { }
     };
 
     private void initSuccess(GazeTracker gazeTracker) {
@@ -548,17 +482,6 @@ public class MainActivity extends AppCompatActivity {
                         if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
                             float[] filteredPoint = oneEuroFilterManager.getFilteredValues();
                             showGazePoint(filteredPoint[0], filteredPoint[1], gazeInfo.screenState);
-
-                            textView.setOnTouchListener(new View.OnTouchListener() {
-                                @Override
-                                public boolean onTouch(View v, MotionEvent event) {
-                                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                        Log.i(TAG, "Touch 완료");
-                                    }
-
-                                    return true;
-                                }
-                            });
                         }
                     } else {
                         showGazePoint(gazeInfo.x, gazeInfo.y, gazeInfo.screenState);
@@ -568,33 +491,13 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private CalibrationCallback calibrationCallback = new CalibrationCallback() {
-        @Override
-        public void onCalibrationProgress(float progress) {
-            setCalibrationProgress(progress);
-        }
-
-        @Override
-        public void onCalibrationNextPoint(final float x, final float y) {
-            setCalibrationPoint(x, y);
-            // Give time to eyes find calibration coordinates, then collect data samples
-            backgroundHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startCollectSamples();
-                }
-            }, 1000);
-        }
-
-        @Override
-        public void onCalibrationFinished(double[] calibrationData) {
-            // 캘리브레이션이 끝나면 자동으로 gazepoint에 적용되어있고
-            // calibrationDataStorage에 calibrationData를 넣는것은 다음번에 캘리브레이션 하지않고 사용하게 하기 위함이다.
-            CalibrationDataStorage.saveCalibrationData(getApplicationContext(), calibrationData);
-            hideCalibrationView();
-            showToast("calibrationFinished", true);
-        }
-    };
+    private void setViewAtGazeTrackerState() {
+//        Log.i(TAG, "gaze : " + isGazeNonNull() + ", tracking " + isTracking());
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() { }
+        });
+    }
 
     private StatusCallback statusCallback = new StatusCallback() {
         @Override
@@ -651,53 +554,5 @@ public class MainActivity extends AppCompatActivity {
         if (isGazeNonNull()) {
             gazeTracker.startTracking();
         }
-    }
-
-    private boolean startCalibration() {
-        boolean isSuccess = false;
-        if (isGazeNonNull()) {
-            isSuccess = gazeTracker.startCalibration(calibrationType);
-            if (!isSuccess) {
-                showToast("calibration start fail", false);
-            }
-        }
-        setViewAtGazeTrackerState();
-        return isSuccess;
-    }
-
-    // Collect the data samples used for calibration
-    private boolean startCollectSamples() {
-        boolean isSuccess = false;
-        if (isGazeNonNull()) {
-            isSuccess = gazeTracker.startCollectSamples();
-        }
-        setViewAtGazeTrackerState();
-        return isSuccess;
-    }
-
-    private void stopCalibration() {
-        if (isGazeNonNull()) {
-            gazeTracker.stopCalibration();
-        }
-        hideCalibrationView();
-        setViewAtGazeTrackerState();
-    }
-
-    private void setCalibration() {
-        if (isGazeNonNull()) {
-            double[] calibrationData = CalibrationDataStorage.loadCalibrationData(getApplicationContext());
-            if (calibrationData != null) {
-                // When if stored calibration data in SharedPreference
-                if (!gazeTracker.setCalibrationData(calibrationData)) {
-                    showToast("calibrating", false);
-                } else {
-                    showToast("setCalibrationData success", false);
-                }
-            } else {
-                // When if not stored calibration data in SharedPreference
-                showToast("Calibration data is null", true);
-            }
-        }
-        setViewAtGazeTrackerState();
     }
 }
