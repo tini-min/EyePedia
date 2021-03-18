@@ -42,6 +42,21 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
+
+
+import android.os.Environment;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
@@ -52,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
     private ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
+
+
+    TextView txtRead;
+    final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +87,35 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        txtRead = (TextView)findViewById(R.id.txtRead);
+    }
+    public void mOnFileRead(View v){
+        String read = ReadTextFile(filePath);
+        txtRead.setText(read);
+    }
+
+
+
+
+
+    public String ReadTextFile(String path){
+        StringBuffer strBuffer = new StringBuffer();
+        try{
+            InputStream is = new FileInputStream(path);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line="";
+            while((line=reader.readLine())!=null){
+                strBuffer.append(line+"\n");
+            }
+
+            reader.close();
+            is.close();
+        }catch (IOException e){
+            e.printStackTrace();
+            return "";
+        }
+        return strBuffer.toString();
     }
 
     @Override
@@ -265,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-             if (v == btnStartCalibration) {
+            if (v == btnStartCalibration) {
                 startCalibration();
             } else if (v == btnStopCalibration) {
                 stopCalibration();
