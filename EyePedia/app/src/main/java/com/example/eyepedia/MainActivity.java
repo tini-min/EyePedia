@@ -1,6 +1,9 @@
 package com.example.eyepedia;
 
 import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,14 +21,26 @@ import androidx.core.content.ContextCompat;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.provider.Settings;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import camp.visual.gazetracker.*;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -53,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
+    private TextView textView= (TextView) findViewById(R.id.textView);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +82,56 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Spannable spannable = (Spannable) textView.getText();
+        String content = textView.getText().toString(); Log.i(TAG, content);
+        String[] strArray = content.split("\\."); Log.i(TAG, Arrays.toString(strArray));
+        List<Integer> indArray = new ArrayList<Integer>();
+        for(String str : strArray) { indArray.add(content.indexOf(str)); }
+        indArray.add(content.length());
+
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        for(int i = 0; i < indArray.size() - 1; i++) {
+            int finalI = i;
+            spannable.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    showToast(indArray.get(finalI).toString(), false);
+                }
+            }, indArray.get(finalI), indArray.get(finalI + 1) - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        textView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction()==MotionEvent.ACTION_DOWN) {
+                    Log.i(TAG, "Touch 완료");
+                }
+
+                return true;
+            }
+        });
+
+        // Obtain MotionEvent object
+        long downTime = SystemClock.uptimeMillis();
+        long eventTime = SystemClock.uptimeMillis() + 100;
+//        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
+//        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
+        float x = 200.0f;
+        float y = 850.0f;
+        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
+        int metaState = 0;
+        MotionEvent motionEvent = MotionEvent.obtain(
+                downTime,
+                eventTime,
+                MotionEvent.ACTION_UP,
+                x,
+                y,
+                metaState
+        );
+
+        // Dispatch touch event to view
+        textView.dispatchTouchEvent(motionEvent);
     }
 
     @Override
@@ -82,9 +149,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+       switch (id) {
+           case R.id.action_settings:
+               Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+               startActivity(intent);
+       }
 
         return super.onOptionsItemSelected(item);
     }
@@ -440,12 +509,22 @@ public class MainActivity extends AppCompatActivity {
                         if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
                             float[] filteredPoint = oneEuroFilterManager.getFilteredValues();
                             showGazePoint(filteredPoint[0], filteredPoint[1], gazeInfo.screenState);
+
+                            textView.setOnTouchListener(new View.OnTouchListener() {
+                                @Override
+                                public boolean onTouch(View v, MotionEvent event) {
+                                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                                        Log.i(TAG, "Touch 완료");
+                                    }
+
+                                    return true;
+                                }
+                            });
                         }
                     } else {
                         showGazePoint(gazeInfo.x, gazeInfo.y, gazeInfo.screenState);
                     }
                 }
-//                Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState);
             }
         }
     };
