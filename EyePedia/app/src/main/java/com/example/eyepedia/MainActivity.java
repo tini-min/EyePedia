@@ -2,7 +2,6 @@ package com.example.eyepedia;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -14,7 +13,6 @@ import com.google.android.material.appbar.AppBarLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
@@ -22,13 +20,11 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.TextureView;
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.RadioButton;
 import android.widget.Toast;
 
 import camp.visual.gazetracker.*;
@@ -255,9 +251,7 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
-    private TextureView preview;
     private View layoutProgress;
-    private View viewWarningTracking;
     private PointView viewPoint;
     private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
     private CalibrationViewer viewCalibration;
@@ -269,9 +263,6 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
-
-        preview = findViewById(R.id.preview);
-        preview.setSurfaceTextureListener(surfaceTextureListener);
 
         btnStartCalibration = findViewById(R.id.btn_start_calibration);
         btnStopCalibration = findViewById(R.id.btn_stop_calibration);
@@ -286,30 +277,6 @@ public class MainActivity extends AppCompatActivity {
 
         setOffsetOfView();
     }
-
-    // 다시보기
-    private TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            // When if textureView available
-            setCameraPreview(preview);
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-            return false;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
-        }
-    };
 
     // The gaze or calibration coordinates are delivered only to the absolute coordinates of the entire screen.
     // The coordinate system of the Android view is a relative coordinate system,
@@ -453,10 +420,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSuccess(GazeTracker gazeTracker) {
         this.gazeTracker = gazeTracker;
-        if (preview.isAvailable()) {
-            // When if textureView available
-            setCameraPreview(preview);
-        }
         this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
@@ -669,17 +632,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         setViewAtGazeTrackerState();
-    }
-
-    private void setCameraPreview(TextureView preview) {
-        if (isGazeNonNull()) {
-            gazeTracker.setCameraPreview(preview);
-        }
-    }
-
-    private void removeCameraPreview() {
-        if (isGazeNonNull()) {
-            gazeTracker.removeCameraPreview();
-        }
     }
 }
