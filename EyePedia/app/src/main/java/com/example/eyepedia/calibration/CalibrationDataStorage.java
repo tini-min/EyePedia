@@ -1,4 +1,4 @@
-package com.example.eyepedia.view;
+package com.example.eyepedia.calibration;
 
 import android.content.Context;
 import android.content.SharedPreferences;
