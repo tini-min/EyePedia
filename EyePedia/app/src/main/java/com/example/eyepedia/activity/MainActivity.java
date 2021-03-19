@@ -1,13 +1,17 @@
-package com.example.eyepedia;
+package com.example.eyepedia.activity;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.example.eyepedia.GazeTrackerManager;
+import com.example.eyepedia.R;
 import com.example.eyepedia.view.GazePathView;
-import com.example.eyepedia.view.PointView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -17,6 +21,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.Spannable;
@@ -30,25 +35,20 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import camp.visual.gazetracker.*;
-import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
-import camp.visual.gazetracker.callback.InitializationCallback;
-import camp.visual.gazetracker.callback.StatusCallback;
-import camp.visual.gazetracker.constant.InitializationErrorType;
-import camp.visual.gazetracker.constant.StatusErrorType;
+import camp.visual.gazetracker.constant.CalibrationModeType;
 import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
-import camp.visual.gazetracker.state.ScreenState;
-import camp.visual.gazetracker.state.TrackingState;
+import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
 
@@ -68,23 +68,21 @@ public class MainActivity extends AppCompatActivity {
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
 
+    private GazeTrackerManager gazeTrackerManager;
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private GazePathView gazePathView;
-    private GazeTrackerManager gazeTrackerManager;
     private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(
             2, 30, 0.5F, 0.001F, 1.0F);
+    private HandlerThread backgroundThread = new HandlerThread("background");
+    private Handler backgroundHandler;
 
     //private GazeTracker gazeTracker;
-
-    private TextView textView;
-    private ConstraintLayout constraintLayout;
-    private Button btn;
-    final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
         initView();
@@ -93,70 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        textView = findViewById(R.id.textView);
-        constraintLayout = findViewById((R.id.layout));
-        Spannable spannable = (Spannable) textView.getText();
-        String content = textView.getText().toString(); Log.i(TAG, content);
-        String[] strArray = content.split("\\."); Log.i(TAG, Arrays.toString(strArray));
-        List<Integer> indArray = new ArrayList<Integer>();
-        for(String str : strArray) { indArray.add(content.indexOf(str)); }
-        indArray.add(content.length());
-
-        // Obtain MotionEvent object
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis() + 100;
-//        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
-//        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
-        float x = 800.0f;
-        float y = 500.0f;
-        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
-        int metaState = 0;
-        //MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState);
-
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
-        for(int i = 0; i < indArray.size() - 1; i++) {
-            int finalI = i;
-            spannable.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(View widget) {
-                    //textView.dispatchTouchEvent(motionEvent);
-                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-                }
-            }, indArray.get(finalI), indArray.get(finalI + 1) - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        btn = (Button) findViewById(R.id.button);
-        btn.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
-                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
-            }
-        });
-    }
-    public void mOnFileRead(View v){
-        String read = ReadTextFile(filePath);
-        textView.setText(read);
-    }
-
-    public String ReadTextFile(String path) {
-        StringBuffer strBuffer = new StringBuffer();
-        try {
-            InputStream is = new FileInputStream(path);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                strBuffer.append(line + "\n");
-            }
-
-            reader.close();
-            is.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-        return strBuffer.toString();
     }
 
     @Override
@@ -186,9 +120,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Log.i(TAG, "onStart");
-        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback);
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         initView();
+        Log.i(TAG, "onStart");
     }
 
     @Override
@@ -209,14 +143,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        gazeTrackerManager.removeCallbacks(gazeCallback);
+        gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         Log.i(TAG, "onStop");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        releaseHandler();
+        viewLayoutChecker.releaseChecker();
+        releaseGaze();
     }
+
+    // handler
+
+    private void initHandler() {
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+
+    private void releaseHandler() {
+        backgroundThread.quitSafely();
+    }
+
+    // handler end
 
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -282,6 +232,33 @@ public class MainActivity extends AppCompatActivity {
         initGaze();
     }
     // permission end
+
+    //view
+    private boolean isUseGazeFilter = true;
+    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
+
+    private void initView() {
+        gazePathView = findViewById(R.id.gazePathView);
+    }
+
+    private void setOffsetOfView() {
+        viewLayoutChecker.setOverlayView(gazePathView, new ViewLayoutChecker.ViewLayoutListener() {
+            @Override
+            public void getOffset(int x, int y) {
+                gazePathView.setOffset(x, y);
+            }
+        });
+    }
+
+    private final GazeCallback gazeCallback = new GazeCallback() {
+        @Override
+        public void onGaze(GazeInfo gazeInfo) {
+            if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
+                float[] filtered = oneEuroFilterManager.getFilteredValues();
+                gazePathView.onGaze(filtered[0], filtered[1], gazeInfo.eyeMovementState == EyeMovementState.FIXATION);
+            }
+        }
+    };
 
 //    private void initFail(InitializationErrorType error) {
 //        String err = "";

@@ -1,4 +1,4 @@
-package com.example.eyepedia;
+package com.example.eyepedia.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.eyepedia.R;
 import com.example.eyepedia.view.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.PointView;
