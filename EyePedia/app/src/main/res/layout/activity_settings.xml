@@ -38,12 +38,4 @@
             tools:layout_margin="20dp"
             android:text="설정 삭제" />
     </LinearLayout>
-
-    <!-- 캘리브레이션 뷰 -->
-    <com.example.eyepedia.view.CalibrationViewer
-        android:id="@+id/view_calibration"
-        android:visibility="invisible"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

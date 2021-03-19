@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
@@ -26,14 +27,26 @@
         android:name="com.example.eyepedia.activity.TextFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-    </FrameLayout>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"></FrameLayout>
 
     <!-- 시선 좌표 -->
     <com.example.eyepedia.view.GazePathView
         android:id="@+id/gazePathView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <com.example.eyepedia.view.PointView
+        android:id="@+id/view_point"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible" />
+
+    <!-- 캘리브레이션 뷰 -->
+    <com.example.eyepedia.view.CalibrationViewer
+        android:id="@+id/view_calibration"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible" />
 
     <include
         layout="@layout/layout_progress"
