@@ -2,20 +2,18 @@ package com.example.eyepedia.activity;
 
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.SystemClock;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.eyepedia.R;
@@ -29,11 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TextFragment extends Fragment {
-
     @Nullable
+    private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
-    private ConstraintLayout constraintLayout;
-    private Button btn;
     final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
 
     public TextFragment() {
@@ -50,8 +46,6 @@ public class TextFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_text, container, false);
         textView = (TextView) view.findViewById(R.id.textView);
-        constraintLayout = (ConstraintLayout) view.findViewById((R.id.layout));
-        btn = (Button) view.findViewById(R.id.button);
 
         return view;
     }
@@ -67,36 +61,17 @@ public class TextFragment extends Fragment {
         }
         indArray.add(content.length());
 
-        // Obtain MotionEvent object
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis() + 100;
-//        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
-//        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
-        float x = 800.0f;
-        float y = 500.0f;
-        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
-        int metaState = 0;
-        //MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState);
-
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         for (int i = 0; i < indArray.size() - 1; i++) {
             int finalI = i;
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    //textView.dispatchTouchEvent(motionEvent);
-                    //Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
+                    Toast.makeText(getActivity(), content.substring(indArray.get(finalI), indArray.get(finalI + 1)), Toast.LENGTH_LONG).show();
+                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
                 }
-            }, indArray.get(finalI), indArray.get(finalI + 1) - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-
-        btn.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
-                constraintLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
-            }
-        });
     }
     public void mOnFileRead(View v){
         String read = ReadTextFile(filePath);

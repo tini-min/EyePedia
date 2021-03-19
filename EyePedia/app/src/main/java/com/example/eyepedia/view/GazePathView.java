@@ -8,10 +8,11 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -199,5 +200,17 @@ public class GazePathView extends View {
     }
     private void drawFixation(Canvas canvas) {
         canvas.drawCircle(fixationDrawPoint.x, fixationDrawPoint.y, curPointSize, pointPaint);
+    }
+
+    public boolean isLongFixation(long timeStamp) {
+        if (firstFixationTime == 0) {
+            return false;
+        } else {
+            long timeDiff = timeStamp - firstFixationTime;
+            float size = evaluator.evaluate((float) timeDiff / MAX_FIXATION_SIZE_TIME, MIN_POINT_RADIUS, MAX_POINT_RADIUS);
+
+            //if (!(size < MAX_POINT_RADIUS)) Log.i("GazeInfo", "timeDiff: " + timeDiff);
+            return !(size < MAX_POINT_RADIUS);
+        }
     }
 }
