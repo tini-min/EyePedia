@@ -1,7 +1,5 @@
 package com.example.eyepedia.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -10,8 +8,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.eyepedia.R;
-import com.example.eyepedia.view.CalibrationDataStorage;
+import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.PointView;
 
@@ -60,7 +60,7 @@ public class SettingActivity extends AppCompatActivity {
         btnSetCalibration = findViewById(R.id.btn_set_calibration);
         btnSetCalibration.setOnClickListener(onClickListener);
 
-        viewPoint = findViewById(R.id.view_point);
+        //viewPoint = findViewById(R.id.view_point);
         viewCalibration = findViewById(R.id.view_calibration);
 
         setOffsetOfView();

@@ -22,16 +22,11 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
+        android:id="@+id/fragment_text"
+        android:name="com.example.eyepedia.activity.TextFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <fragment
-            android:id="@+id/fragment_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:name="com.example.eyepedia.activity.TextFragment" />
-
     </FrameLayout>
 
     <!-- 시선 좌표 -->

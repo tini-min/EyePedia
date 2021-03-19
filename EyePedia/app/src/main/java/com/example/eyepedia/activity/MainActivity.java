@@ -3,63 +3,42 @@ package com.example.eyepedia.activity;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
-
-import com.example.eyepedia.GazeTrackerManager;
-import com.example.eyepedia.R;
-import com.example.eyepedia.view.GazePathView;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.SystemClock;
-import android.provider.Settings;
-import android.text.Spannable;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
+import com.example.eyepedia.GazeTrackerManager;
+import com.example.eyepedia.R;
+import com.example.eyepedia.view.GazePathView;
 
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import camp.visual.gazetracker.*;
+import camp.visual.gazetracker.GazeTracker;
+import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
+import camp.visual.gazetracker.callback.InitializationCallback;
+import camp.visual.gazetracker.callback.StatusCallback;
 import camp.visual.gazetracker.constant.CalibrationModeType;
+import camp.visual.gazetracker.constant.InitializationErrorType;
+import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
 import camp.visual.gazetracker.state.EyeMovementState;
+import camp.visual.gazetracker.state.ScreenState;
+import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
-
-
-
-import android.os.Environment;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -91,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
     }
 
     @Override
@@ -108,11 +89,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-       switch (id) {
-           case R.id.action_settings:
-               Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-               startActivity(intent);
-       }
+        switch (id) {
+            case R.id.action_settings:
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -234,11 +215,17 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
+    private View layoutProgress;
     private boolean isUseGazeFilter = true;
     private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
 
     private void initView() {
         gazePathView = findViewById(R.id.gazePathView);
+
+        layoutProgress = findViewById(R.id.layout_progress);
+        layoutProgress.setOnClickListener(null);
+
+        setOffsetOfView();
     }
 
     private void setOffsetOfView() {
@@ -246,6 +233,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void getOffset(int x, int y) {
                 gazePathView.setOffset(x, y);
+            }
+        });
+    }
+
+    private void showProgress() {
+        if (layoutProgress != null) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    layoutProgress.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+    }
+
+    private void hideProgress() {
+        if (layoutProgress != null) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    layoutProgress.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+    }
+
+    private void showToast(final String msg, final boolean isShort) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this, msg, isShort ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -259,61 +277,154 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    // view end
 
-//    private void initFail(InitializationErrorType error) {
-//        String err = "";
-//        if (error == InitializationErrorType.ERROR_INIT) {
-//            // When initialization is failed
-//            err = "Initialization failed";
-//        } else if (error == InitializationErrorType.ERROR_CAMERA_PERMISSION) {
-//            // When camera permission doesn not exists
-//            err = "Required permission not granted";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_KEY) {
-//            // Authentication failure (Invalid License Key)
-//            err = "Invalid License Key";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_DEV_IN_PROD) {
-//            // Using Dev Key in Prod Environment
-//            err = "Authentication failed (Dev Key in Prod Environment)";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_PROD_IN_DEV) {
-//            // Using Prod Key in Dev Environment
-//            err = "Authentication failed (Prod Key in Dev Environment)";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_PACKAGE_NAME) {
-//            // Invalide Package Name
-//            err = "Invalid Package Name";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_APP_SIGNATURE) {
-//            // Invalid App Signature
-//            err = "Invalid App Signature";
-//        } else if (error == InitializationErrorType.AUTH_EXCEEDED_FREE_TIER) {
-//            // Free Tier limit is exceeded
-//            err = "Free Tier limit is exceeded";
-//        } else if (error == InitializationErrorType.AUTH_DEACTIVATED_KEY) {
-//            // Deactivated License Key
-//            err = "Authentication failed (Deactivated License Key)";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_ACCESS) {
-//            // Invalid Access Method
-//            err = "Invalid Access Method";
-//        } else if (error == InitializationErrorType.AUTH_UNKNOWN_ERROR) {
-//            // Unknown Error
-//            err = "Unknown Error";
-//        } else if (error == InitializationErrorType.AUTH_SERVER_ERROR) {
-//            // Server Authentication Error
-//            err = "Server Authentication failed";
-//        } else if (error == InitializationErrorType.AUTH_CANNOT_FIND_HOST) {
-//            // Host Server Connection failed
-//            err = "Host Server Connection failed";
-//        } else if (error == InitializationErrorType.AUTH_WRONG_LOCAL_TIME) {
-//            // Local and server time does not match
-//            err = "Local device time does not match with Server";
-//        } else if (error == InitializationErrorType.AUTH_INVALID_KEY_FORMAT) {
-//            // Invalide License Key Format
-//            err = "Invalid License Key Format";
-//        } else {
-//            // Gaze library initialization failure
-//            // It can ba caused by several reasons(i.e. Out of memory).
-//            err = "init gaze library fail";
-//        }
-//        Log.w(TAG, "error description: " + err);
-//    }
+    // gazeTracker
+    private boolean isTrackerValid() {
+        return gazeTrackerManager.hasGazeTracker();
+    }
+
+    private boolean isTracking() {
+        return gazeTrackerManager.isTracking();
+    }
+
+    private final InitializationCallback initializationCallback = new InitializationCallback() {
+        @Override
+        public void onInitialized(GazeTracker gazeTracker, InitializationErrorType error) {
+            if (gazeTracker != null) {
+                initSuccess(gazeTracker);
+            } else {
+                initFail(error);
+            }
+        }
+    };
+
+    private void initSuccess(GazeTracker gazeTracker) {
+        startTracking();
+        hideProgress();
+    }
+
+    private void initFail(InitializationErrorType error) {
+        String err = "";
+        if (error == InitializationErrorType.ERROR_INIT) {
+            // When initialization is failed
+            err = "Initialization failed";
+        } else if (error == InitializationErrorType.ERROR_CAMERA_PERMISSION) {
+            // When camera permission doesn not exists
+            err = "Required permission not granted";
+        } else if (error == InitializationErrorType.AUTH_INVALID_KEY) {
+            // Authentication failure (Invalid License Key)
+            err = "Invalid License Key";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_DEV_IN_PROD) {
+            // Using Dev Key in Prod Environment
+            err = "Authentication failed (Dev Key in Prod Environment)";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ENV_USED_PROD_IN_DEV) {
+            // Using Prod Key in Dev Environment
+            err = "Authentication failed (Prod Key in Dev Environment)";
+        } else if (error == InitializationErrorType.AUTH_INVALID_PACKAGE_NAME) {
+            // Invalide Package Name
+            err = "Invalid Package Name";
+        } else if (error == InitializationErrorType.AUTH_INVALID_APP_SIGNATURE) {
+            // Invalid App Signature
+            err = "Invalid App Signature";
+        } else if (error == InitializationErrorType.AUTH_EXCEEDED_FREE_TIER) {
+            // Free Tier limit is exceeded
+            err = "Free Tier limit is exceeded";
+        } else if (error == InitializationErrorType.AUTH_DEACTIVATED_KEY) {
+            // Deactivated License Key
+            err = "Authentication failed (Deactivated License Key)";
+        } else if (error == InitializationErrorType.AUTH_INVALID_ACCESS) {
+            // Invalid Access Method
+            err = "Invalid Access Method";
+        } else if (error == InitializationErrorType.AUTH_UNKNOWN_ERROR) {
+            // Unknown Error
+            err = "Unknown Error";
+        } else if (error == InitializationErrorType.AUTH_SERVER_ERROR) {
+            // Server Authentication Error
+            err = "Server Authentication failed";
+        } else if (error == InitializationErrorType.AUTH_CANNOT_FIND_HOST) {
+            // Host Server Connection failed
+            err = "Host Server Connection failed";
+        } else if (error == InitializationErrorType.AUTH_WRONG_LOCAL_TIME) {
+            // Local and server time does not match
+            err = "Local device time does not match with Server";
+        } else if (error == InitializationErrorType.AUTH_INVALID_KEY_FORMAT) {
+            // Invalide License Key Format
+            err = "Invalid License Key Format";
+        } else {
+            // Gaze library initialization failure
+            // It can ba caused by several reasons(i.e. Out of memory).
+            err = "init gaze library fail";
+        }
+        Log.w(TAG, "error description: " + err);
+    }
+
+    private void processOnGaze(GazeInfo gazeInfo) {
+        if (gazeInfo.trackingState == TrackingState.SUCCESS) {
+            if (!gazeTrackerManager.isCalibrating()) {
+                float[] filtered_gaze = filterGaze(gazeInfo);
+                showGazePoint(filtered_gaze[0], filtered_gaze[1], gazeInfo.screenState);
+            }
+        } else { }
+    }
+
+    private void showGazePoint(final float x, final float y, final ScreenState type) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //gazePathView.setPosition(x, y);
+            }
+        });
+    }
+
+    private float[] filterGaze(GazeInfo gazeInfo) {
+        if (isUseGazeFilter) {
+            if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
+                return oneEuroFilterManager.getFilteredValues();
+            }
+        }
+        return new float[]{gazeInfo.x, gazeInfo.y};
+    }
+
+    private CalibrationCallback calibrationCallback = new CalibrationCallback() {
+        @Override
+        public void onCalibrationProgress(float progress) {
+
+        }
+
+        @Override
+        public void onCalibrationNextPoint(final float x, final float y) {
+
+        }
+
+        @Override
+        public void onCalibrationFinished(double[] calibrationData) {
+
+        }
+    };
+
+    private StatusCallback statusCallback = new StatusCallback() {
+        @Override
+        public void onStarted() { }
+
+        @Override
+        public void onStopped(StatusErrorType error) {
+            // isTracking false
+            // When if camera stream stopping
+            if (error != StatusErrorType.ERROR_NONE) {
+                switch (error) {
+                    case ERROR_CAMERA_START:
+                        // When if camera stream can't start
+                        showToast("ERROR_CAMERA_START ", false);
+                        break;
+                    case ERROR_CAMERA_INTERRUPT:
+                        // When if camera stream interrupted
+                        showToast("ERROR_CAMERA_INTERRUPT ", false);
+                        break;
+                }
+            }
+        }
+    };
 
     private void initGaze() {
         showProgress();
@@ -329,3 +440,22 @@ public class MainActivity extends AppCompatActivity {
         String licenseKey = "dev_6223o6dqrnnywdbl55htd5mr26jv9fi08qskthlp";
         GazeTracker.initGazeTracker(getApplicationContext(), gazeDevice, licenseKey, initializationCallback);
     }
+
+    private void releaseGaze() {
+        gazeTrackerManager.deinitGazeTracker();
+    }
+
+    private void startTracking() {
+        gazeTrackerManager.startGazeTracking();
+    }
+
+    private void stopTracking() {
+        gazeTrackerManager.stopGazeTracking();
+    }
+
+    // Collect the data samples used for calibration
+    private boolean startCollectSamples() {
+        boolean isSuccess = gazeTrackerManager.startCollectingCalibrationSamples();
+        return isSuccess;
+    }
+}
