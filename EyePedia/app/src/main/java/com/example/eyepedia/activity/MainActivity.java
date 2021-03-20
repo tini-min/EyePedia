@@ -45,6 +45,11 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
+import android.os.Bundle;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -75,6 +80,20 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
+
+
+
+        ImageView imageView = (ImageView)findViewById(R.id.imageview);
+        TextView textView = (TextView)findViewById(R.id.textview);
+
+        // drawable에 있는 이미지를 지정합니다.
+        imageView.setImageResource(R.drawable.casual);
+
+        // 100 줄의 텍스트를 생성합니다.
+        String text = "";
+        for(int i=0; i<100; i++)
+            text += i + "\n";
+        textView.setText(text);
     }
 
     @Override

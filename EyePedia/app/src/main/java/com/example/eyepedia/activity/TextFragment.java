@@ -30,16 +30,16 @@ public class TextFragment extends Fragment {
     @Nullable
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
-    final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+    final static String filePath = Environment.DIRECTORY_DOWNLOADS+"/test.txt";
 
     public TextFragment() {
         // Required empty public constructor
     }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,7 +77,6 @@ public class TextFragment extends Fragment {
         String read = ReadTextFile(filePath);
         textView.setText(read);
     }
-
     public String ReadTextFile(String path) {
         StringBuffer strBuffer = new StringBuffer();
         try {
@@ -96,4 +95,5 @@ public class TextFragment extends Fragment {
         }
         return strBuffer.toString();
     }
+
 }
