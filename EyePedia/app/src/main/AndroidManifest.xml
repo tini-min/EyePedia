@@ -32,6 +32,6 @@
 
         <activity
             android:name=".activity.SettingActivity"
-            android:label="Settings"/>
+            android:label="@string/action_settings" />
     </application>
 </manifest>

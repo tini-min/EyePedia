@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
-
     private static boolean GazeViewStatus, InitStatus;
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
@@ -70,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
@@ -81,13 +81,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
-
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
         InitStatus = settings.getBoolean("InitStatus", true);
 
-        if (InitStatus) startCalibration();
         setOffsetOfView();
     }
 
@@ -298,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
         viewCalibration = findViewById(R.id.view_calibration);
         menuBar = findViewById(R.id.menu_bar);
 
+        gazePathView.setVisibility((GazeViewStatus)? View.VISIBLE : View.INVISIBLE);
         setOffsetOfView();
     }
 
@@ -598,6 +596,7 @@ public class MainActivity extends AppCompatActivity {
 
         String licenseKey = "dev_6223o6dqrnnywdbl55htd5mr26jv9fi08qskthlp";
         GazeTracker.initGazeTracker(getApplicationContext(), gazeDevice, licenseKey, initializationCallback);
+        if (InitStatus) startCalibration();
     }
 
     private void releaseGaze() {
