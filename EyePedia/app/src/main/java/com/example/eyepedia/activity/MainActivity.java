@@ -1,14 +1,21 @@
-package com.example.eyepedia;
+package com.example.eyepedia.activity;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-
-import com.example.eyepedia.view.CalibrationDataStorage;
-import com.example.eyepedia.view.CalibrationViewer;
-import com.example.eyepedia.view.PointView;
-import com.google.android.material.appbar.AppBarLayout;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.SystemClock;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -16,18 +23,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.View;
+import com.example.eyepedia.R;
+import com.example.eyepedia.calibration.CalibrationDataStorage;
+import com.example.eyepedia.view.CalibrationViewer;
+import com.example.eyepedia.view.GazePathView;
+import com.example.eyepedia.view.PointView;
 
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.Toast;
-
-import camp.visual.gazetracker.*;
+import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
 import camp.visual.gazetracker.callback.GazeCallback;
 import camp.visual.gazetracker.callback.InitializationCallback;
@@ -38,23 +40,15 @@ import camp.visual.gazetracker.constant.StatusErrorType;
 import camp.visual.gazetracker.device.GazeDevice;
 import camp.visual.gazetracker.filter.OneEuroFilterManager;
 import camp.visual.gazetracker.gaze.GazeInfo;
+import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-
-
-import android.os.Environment;
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -63,22 +57,19 @@ public class MainActivity extends AppCompatActivity {
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
 
+    //private GazeTrackerManager gazeTrackerManager;
     private GazeTracker gazeTracker;
-    private ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
+    private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
-
-    TextView txtRead;
-    final static String filePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-
-
-
+    //private GazeTracker gazeTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
         initView();
@@ -88,34 +79,21 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        txtRead = (TextView)findViewById(R.id.txtRead);
-    }
-    public void mOnFileRead(View v){
-        String read = ReadTextFile(filePath);
-        txtRead.setText(read);
-    }
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
 
 
 
+        ImageView imageView = (ImageView)findViewById(R.id.imageview);
+        TextView textView = (TextView)findViewById(R.id.textview);
 
+        // drawable에 있는 이미지를 지정합니다.
+        imageView.setImageResource(R.drawable.casual);
 
-    public String ReadTextFile(String path){
-        StringBuffer strBuffer = new StringBuffer();
-        try{
-            InputStream is = new FileInputStream(path);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line="";
-            while((line=reader.readLine())!=null){
-                strBuffer.append(line+"\n");
-            }
-
-            reader.close();
-            is.close();
-        }catch (IOException e){
-            e.printStackTrace();
-            return "";
-        }
-        return strBuffer.toString();
+        // 100 줄의 텍스트를 생성합니다.
+        String text = "";
+        for(int i=0; i<100; i++)
+            text += i + "\n";
+        textView.setText(text);
     }
 
     @Override
@@ -133,8 +111,10 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -143,26 +123,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        //gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         Log.i(TAG, "onStart");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume");
-        // 화면 전환후에도 체크하기 위해
+        startTracking();
         setOffsetOfView();
+        Log.i(TAG, "onResume");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        stopTracking();
         Log.i(TAG, "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        stopTracking();
         Log.i(TAG, "onStop");
     }
 
@@ -174,6 +157,18 @@ public class MainActivity extends AppCompatActivity {
         releaseGaze();
     }
 
+    // handler
+    private void initHandler() {
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+
+    private void releaseHandler() {
+        backgroundThread.quitSafely();
+    }
+    // handler end
+
+    // permission
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!hasPermissions(PERMISSIONS)) {
@@ -215,18 +210,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // handler
-    private void initHandler() {
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-    }
-
-    private void releaseHandler() {
-        backgroundThread.quitSafely();
-    }
-    // handler end
-
-    // permission
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -251,41 +234,35 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
+    //private CoordinatorLayout backgroundLayout;
+    private FrameLayout textLayout;
     private View layoutProgress;
     private PointView viewPoint;
-    private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
     private CalibrationViewer viewCalibration;
-    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
-    private AppBarLayout menuBar;
-    // gaze coord filter
+    private GazePathView gazePathView;
     private boolean isUseGazeFilter = true;
+    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
 
     private void initView() {
+        //backgroundLayout = findViewById(R.id.layout_background);
+        textLayout = findViewById(R.id.fragment_text);
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
 
-        btnStartCalibration = findViewById(R.id.btn_start_calibration);
-        btnStopCalibration = findViewById(R.id.btn_stop_calibration);
-        btnStartCalibration.setOnClickListener(onClickListener);
-        btnStopCalibration.setOnClickListener(onClickListener);
-        btnSetCalibration = findViewById(R.id.btn_set_calibration);
-        btnSetCalibration.setOnClickListener(onClickListener);
-
         viewPoint = findViewById(R.id.view_point);
+        gazePathView = findViewById(R.id.gazePathView);
         viewCalibration = findViewById(R.id.view_calibration);
-        menuBar = findViewById(R.id.menu_bar);
+        //viewPoint.bringToFront();
 
         setOffsetOfView();
     }
 
-    // The gaze or calibration coordinates are delivered only to the absolute coordinates of the entire screen.
-    // The coordinate system of the Android view is a relative coordinate system,
-    // so the offset of the view to show the coordinates must be obtained and corrected to properly show the information on the screen.
     private void setOffsetOfView() {
         viewLayoutChecker.setOverlayView(viewPoint, new ViewLayoutChecker.ViewLayoutListener() {
             @Override
             public void getOffset(int x, int y) {
                 viewPoint.setOffset(x, y);
+                gazePathView.setOffset(x, y);
                 viewCalibration.setOffset(x, y);
             }
         });
@@ -313,19 +290,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (v == btnStartCalibration) {
-                startCalibration();
-            } else if (v == btnStopCalibration) {
-                stopCalibration();
-            } else if (v == btnSetCalibration) {
-                setCalibration();
-            }
-        }
-    };
-
     private void showToast(final String msg, final boolean isShort) {
         runOnUiThread(new Runnable() {
             @Override
@@ -335,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // 다시보기
     private void showGazePoint(final float x, final float y, final ScreenState type) {
         runOnUiThread(new Runnable() {
             @Override
@@ -351,7 +314,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 viewCalibration.setVisibility(View.VISIBLE);
-                menuBar.setVisibility(View.INVISIBLE);
                 viewCalibration.changeDraw(true, null);
                 viewCalibration.setPointPosition(x, y);
                 viewCalibration.setPointAnimationPower(0);
@@ -373,7 +335,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 viewCalibration.setVisibility(View.INVISIBLE);
-                menuBar.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -383,16 +344,12 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                btnStartCalibration.setEnabled(isGazeNonNull() && isTracking());
-                btnStopCalibration.setEnabled(isGazeNonNull() && isTracking());
-                btnSetCalibration.setEnabled(isGazeNonNull());
                 if (!isTracking()) {
                     hideCalibrationView();
                 }
             }
         });
     }
-
     // view end
 
     // gazeTracker
@@ -402,7 +359,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
     private boolean isGazeNonNull() {
         return gazeTracker != null;
     }
@@ -480,20 +436,48 @@ public class MainActivity extends AppCompatActivity {
         Log.w(TAG, "error description: " + err);
     }
 
+    private Long activeTime = null;
     private final OneEuroFilterManager oneEuroFilterManager = new OneEuroFilterManager(2);
     private GazeCallback gazeCallback = new GazeCallback() {
         @Override
         public void onGaze(GazeInfo gazeInfo) {
             if (isGazeNonNull()) {
                 TrackingState state = gazeInfo.trackingState;
-                if (!gazeTracker.isCalibrating()) {
-                    if (isUseGazeFilter) {
-                        if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
-                            float[] filteredPoint = oneEuroFilterManager.getFilteredValues();
-                            showGazePoint(filteredPoint[0], filteredPoint[1], gazeInfo.screenState);
+                if (state == TrackingState.SUCCESS) {
+                    if (!gazeTracker.isCalibrating()) {
+                        if (isUseGazeFilter) {
+                            if (oneEuroFilterManager.filterValues(gazeInfo.timestamp, gazeInfo.x, gazeInfo.y)) {
+                                float[] filteredPoint = oneEuroFilterManager.getFilteredValues();
+                                gazePathView.onGaze(filteredPoint[0], filteredPoint[1], gazeInfo.eyeMovementState == EyeMovementState.FIXATION);
+                                long curTime = System.currentTimeMillis();
+                                if (gazePathView.isLongFixation(curTime)) {
+                                    if (activeTime == null) {
+                                        activeTime = curTime;
+                                    } else if (!(curTime - activeTime < 1000)) {
+                                        activeTime = curTime;
+                                        // Obtain MotionEvent object
+                                        long downTime = SystemClock.uptimeMillis();
+                                        long eventTime = SystemClock.uptimeMillis() + 100;
+                                        float x = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[0] : 0.0f);
+                                        float y = (gazeInfo.screenState == ScreenState.INSIDE_OF_SCREEN ? filteredPoint[1] : 0.0f);
+                                        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
+                                        int metaState = 0;
+
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                textLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
+                                                textLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
+                                                Log.i(TAG, "Touch 완료");
+                                            }
+                                        });
+                                        Log.i(TAG, "GazeTracker x: " + x + " GazeTracker y: " + y);
+                                    }
+                                }
+                            }
+                        } else {
+                            showGazePoint(gazeInfo.x, gazeInfo.y, gazeInfo.screenState);
                         }
-                    } else {
-                        showGazePoint(gazeInfo.x, gazeInfo.y, gazeInfo.screenState);
                     }
                 }
 //                Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState);
@@ -534,14 +518,12 @@ public class MainActivity extends AppCompatActivity {
         public void onStarted() {
             // isTracking true
             // When if camera stream starting
-            setViewAtGazeTrackerState();
         }
 
         @Override
         public void onStopped(StatusErrorType error) {
             // isTracking false
             // When if camera stream stopping
-            setViewAtGazeTrackerState();
             if (error != StatusErrorType.ERROR_NONE) {
                 switch (error) {
                     case ERROR_CAMERA_START:
@@ -577,12 +559,17 @@ public class MainActivity extends AppCompatActivity {
             GazeTracker.deinitGazeTracker(gazeTracker);
             gazeTracker = null;
         }
-        setViewAtGazeTrackerState();
     }
 
     private void startTracking() {
         if (isGazeNonNull()) {
             gazeTracker.startTracking();
+        }
+    }
+
+    private void stopTracking() {
+        if (isGazeNonNull()) {
+            gazeTracker.stopTracking();
         }
     }
 
