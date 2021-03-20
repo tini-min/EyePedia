@@ -41,4 +41,7 @@ dependencies {
 
     implementation project(':libgaze-release')
     implementation project(':gazetracker-release')
+    implementation 'gun0912.ted:tedpermission:2.0.0'
+
+
 }

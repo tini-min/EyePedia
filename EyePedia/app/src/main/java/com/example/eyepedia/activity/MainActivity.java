@@ -1,6 +1,7 @@
 package com.example.eyepedia.activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,6 +30,10 @@ import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+
+import java.util.ArrayList;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -45,11 +51,10 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-import android.os.Bundle;
-import android.widget.ImageView;
-import android.widget.TextView;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
-
+// mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -62,9 +67,43 @@ public class MainActivity extends AppCompatActivity {
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
+    private ImageView imageView;
+
+
+
+    Context context;
+
+    PermissionListener permissionlistener = new PermissionListener() {
+        @Override
+        public void onPermissionGranted() {
+            initView(); // 권한이 승인되었을 때 실행할 함수
+        }
+
+        @Override
+        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+            Toast.makeText(MainActivity.this, "권한 허용을 하지 않으면 서비스를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
+            TedPermission.with(this)
+                    .setPermissionListener(permissionlistener)
+                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
+                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_CONTACTS
+                    })
+                    .check();
+
+        } else { initView();}
+    }
+
 
     //private GazeTracker gazeTracker;
 
+    // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,20 +120,12 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
 
+        context = this.getBaseContext();
 
-
-        ImageView imageView = (ImageView)findViewById(R.id.imageview);
-        TextView textView = (TextView)findViewById(R.id.textview);
-
-        // drawable에 있는 이미지를 지정합니다.
-        imageView.setImageResource(R.drawable.casual);
-
-        // 100 줄의 텍스트를 생성합니다.
-        String text = "";
-        for(int i=0; i<100; i++)
-            text += i + "\n";
-        textView.setText(text);
+        checkPermissions();
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -235,8 +266,9 @@ public class MainActivity extends AppCompatActivity {
 
     //view
     //private CoordinatorLayout backgroundLayout;
+    // class : 개인이 정의한 객체 / Java가 객체지향 - 변수랑 함수랑 모여있는게 클래스
     private FrameLayout textLayout;
-    private View layoutProgress;
+    private View layoutProgress; // class 이름
     private PointView viewPoint;
     private CalibrationViewer viewCalibration;
     private GazePathView gazePathView;
