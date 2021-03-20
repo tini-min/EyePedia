@@ -2,6 +2,7 @@ package com.example.eyepedia.activity;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,13 +15,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 
 import com.example.eyepedia.R;
@@ -28,6 +30,7 @@ import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
+import com.google.android.material.appbar.AppBarLayout;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -52,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
 
+    private static boolean GazeViewStatus, InitStatus;
+    public static final String PREFS_NAME = "setup";
+    Long pressedTime = null;
+
     //private GazeTrackerManager gazeTrackerManager;
     private GazeTracker gazeTracker;
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
@@ -75,6 +82,13 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
+
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
+        InitStatus = settings.getBoolean("InitStatus", true);
+
+        if (InitStatus) startCalibration();
+        setOffsetOfView();
     }
 
     @Override
@@ -95,15 +109,35 @@ public class MainActivity extends AppCompatActivity {
         switch (id) {
             case R.id.action_settings:
                 Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-                startActivity(intent);
+                intent.putExtra("GazeViewStatus", GazeViewStatus);
+                intent.putExtra("InitStatus", InitStatus);
+                startActivityForResult(intent, 0);
+
+                Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 0){
+            if (resultCode == RESULT_OK) {
+                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+                InitStatus = data.getBooleanExtra("InitStatus", true);
+            } else showToast("설정 저장 실패", true);
+        }
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
+        SettingActivity SA = (SettingActivity) SettingActivity.SetActivity;
+        //if (SA != null) SA.finish();
+
+        startTracking();
         //gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
         Log.i(TAG, "onStart");
     }
@@ -111,8 +145,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startTracking();
-        setOffsetOfView();
+        if (getIntent().getBooleanExtra("ActiveCalibration", false)) {
+            startCalibration();
+        }
+        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         Log.i(TAG, "onResume");
     }
 
@@ -127,6 +164,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         stopTracking();
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("GazeViewStatus", GazeViewStatus);
+        editor.putBoolean("InitStatus", InitStatus);
+
+        editor.commit();
         Log.i(TAG, "onStop");
     }
 
@@ -136,6 +179,27 @@ public class MainActivity extends AppCompatActivity {
         releaseHandler();
         viewLayoutChecker.releaseChecker();
         releaseGaze();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if ( pressedTime == null ) {
+            Toast.makeText(MainActivity.this, " 한 번 더 누르면 종료됩니다." , Toast.LENGTH_LONG).show();
+            pressedTime = System.currentTimeMillis();
+        }
+        else {
+            int seconds = (int) (System.currentTimeMillis() - pressedTime);
+
+            if ( seconds > 2000 ) {
+                Toast.makeText(MainActivity.this, " 한 번 더 누르면 종료됩니다." , Toast.LENGTH_LONG).show();
+                pressedTime = System.currentTimeMillis();
+            }
+            else {
+                moveTaskToBack(true);
+                finishAndRemoveTask();
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        }
     }
 
     // handler
@@ -215,25 +279,24 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
-    //private CoordinatorLayout backgroundLayout;
-    private FrameLayout textLayout;
+    private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
     private PointView viewPoint;
     private CalibrationViewer viewCalibration;
+    private AppBarLayout menuBar;
     private GazePathView gazePathView;
     private boolean isUseGazeFilter = true;
     private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
 
     private void initView() {
-        //backgroundLayout = findViewById(R.id.layout_background);
-        textLayout = findViewById(R.id.fragment_text);
+        backgroundLayout = findViewById(R.id.layout_background);
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
 
         viewPoint = findViewById(R.id.view_point);
         gazePathView = findViewById(R.id.gazePathView);
         viewCalibration = findViewById(R.id.view_calibration);
-        //viewPoint.bringToFront();
+        menuBar = findViewById(R.id.menu_bar);
 
         setOffsetOfView();
     }
@@ -294,6 +357,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                menuBar.setVisibility((View.INVISIBLE));
                 viewCalibration.setVisibility(View.VISIBLE);
                 viewCalibration.changeDraw(true, null);
                 viewCalibration.setPointPosition(x, y);
@@ -315,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                menuBar.setVisibility(View.VISIBLE);
                 viewCalibration.setVisibility(View.INVISIBLE);
             }
         });
@@ -447,8 +512,8 @@ public class MainActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                textLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
-                                                textLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
+                                                backgroundLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
+                                                backgroundLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
                                                 Log.i(TAG, "Touch 완료");
                                             }
                                         });

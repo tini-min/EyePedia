@@ -1,139 +1,91 @@
 package com.example.eyepedia.activity;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
+import android.widget.ListView;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.eyepedia.R;
-import com.example.eyepedia.calibration.CalibrationDataStorage;
-import com.example.eyepedia.view.CalibrationViewer;
-import com.example.eyepedia.view.PointView;
 
-import camp.visual.gazetracker.GazeTracker;
-import camp.visual.gazetracker.callback.CalibrationCallback;
-import camp.visual.gazetracker.constant.CalibrationModeType;
-import camp.visual.gazetracker.util.ViewLayoutChecker;
+import java.util.ArrayList;
 
 public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
-    private GazeTracker gazeTracker;
-    private ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
-    private HandlerThread backgroundThread = new HandlerThread("background");
-    private Handler backgroundHandler;
+    private ArrayList<ListItem> SettingDataList;
+    private enum OnClickType {
+        START_CALIBRATION, GAZE_VIEW_STATUS, INIT_STATUS, SAVE_SETTING, DELETE_SETTING
+    }
+    private boolean GazeViewStatus, InitStatus;
+    public static Activity SetActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        Log.i(TAG, "Setiing open Completed");
+        this.InitializeSettingData();
+
+        ListView listView = (ListView)findViewById(R.id.listView);
+        final SettingAdapter myAdapter = new SettingAdapter(this, SettingDataList);
+
+        listView.setAdapter(myAdapter);
+        SetActivity = SettingActivity.this;
     }
 
-    // handler
-    private void initHandler() {
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
+    @Override
+    protected void onStart() {
+        super.onStart();
+        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
+        Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
+        Log.i(TAG, "onStart");
     }
 
-    private void releaseHandler() {
-        backgroundThread.quitSafely();
-    }
-    // handler end
-
-    //view
-    private Button btnStartCalibration, btnStopCalibration, btnSetCalibration;
-    private PointView viewPoint;
-    private CalibrationViewer viewCalibration;
-    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
-
-    private void initView() {
-        btnStartCalibration = findViewById(R.id.btn_start_calibration);
-        btnStopCalibration = findViewById(R.id.btn_stop_calibration);
-        btnStartCalibration.setOnClickListener(onClickListener);
-        btnStopCalibration.setOnClickListener(onClickListener);
-        btnSetCalibration = findViewById(R.id.btn_set_calibration);
-        btnSetCalibration.setOnClickListener(onClickListener);
-
-        //viewPoint = findViewById(R.id.view_point);
-        viewCalibration = findViewById(R.id.view_calibration);
-
-        setOffsetOfView();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume");
     }
 
-    private void setOffsetOfView() {
-        viewLayoutChecker.setOverlayView(viewPoint, new ViewLayoutChecker.ViewLayoutListener() {
-            @Override
-            public void getOffset(int x, int y) {
-                viewCalibration.setOffset(x, y);
-            }
-        });
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause");
     }
 
-    private View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (v == btnStartCalibration) {
-                startCalibration();
-            } else if (v == btnStopCalibration) {
-                stopCalibration();
-            } else if (v == btnSetCalibration) {
-                setCalibration();
-            }
-        }
-    };
-
-    private boolean startCalibration() {
-        boolean isSuccess = false;
-        if (isGazeNonNull()) {
-            isSuccess = gazeTracker.startCalibration(calibrationType);
-            if (!isSuccess) {
-                showToast("calibration start fail", false);
-            }
-        }
-        setViewAtGazeTrackerState();
-        return isSuccess;
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop");
     }
 
-    // Collect the data samples used for calibration
-    private boolean startCollectSamples() {
-        boolean isSuccess = false;
-        if (isGazeNonNull()) {
-            isSuccess = gazeTracker.startCollectSamples();
-        }
-        setViewAtGazeTrackerState();
-        return isSuccess;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
-    private void stopCalibration() {
-        if (isGazeNonNull()) {
-            gazeTracker.stopCalibration();
-        }
-        hideCalibrationView();
-        setViewAtGazeTrackerState();
-    }
+    @Override
+    public void onBackPressed() {
+        Intent mIntent = new Intent();
+        mIntent.putExtra("GazeViewStatus", GazeViewStatus);
+        mIntent.putExtra("InitStatus", InitStatus);
 
-    private void setCalibration() {
-        if (isGazeNonNull()) {
-            double[] calibrationData = CalibrationDataStorage.loadCalibrationData(getApplicationContext());
-            if (calibrationData != null) {
-                // When if stored calibration data in SharedPreference
-                if (!gazeTracker.setCalibrationData(calibrationData)) {
-                    showToast("calibrating", false);
-                } else {
-                    showToast("setCalibrationData success", false);
-                }
-            } else {
-                // When if not stored calibration data in SharedPreference
-                showToast("Calibration data is null", true);
-            }
-        }
-        setViewAtGazeTrackerState();
+        Log.i("MainActivityNot",String.valueOf(GazeViewStatus) + " / " + InitStatus);
+
+        setResult(Activity.RESULT_OK, mIntent);
+        finish();
     }
 
     private void showToast(final String msg, final boolean isShort) {
@@ -145,88 +97,136 @@ public class SettingActivity extends AppCompatActivity {
         });
     }
 
-    private void setCalibrationPoint(final float x, final float y) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setVisibility(View.VISIBLE);
-//                menuBar.setVisibility(View.INVISIBLE);
-                viewCalibration.changeDraw(true, null);
-                viewCalibration.setPointPosition(x, y);
-                viewCalibration.setPointAnimationPower(0);
-            }
-        });
+    public void InitializeSettingData() {
+        SettingDataList = new ArrayList<ListItem>();
+        SettingDataList.add(new ListItem("정확도 향상", OnClickType.START_CALIBRATION, false));
+        SettingDataList.add(new ListItem("포인터 활성화", OnClickType.GAZE_VIEW_STATUS, true));
+        SettingDataList.add(new ListItem("시작 시 정확도 향상", OnClickType.INIT_STATUS, true));
+        SettingDataList.add(new ListItem("설정 저장", OnClickType.SAVE_SETTING, false));
+        SettingDataList.add(new ListItem("설정 삭제", OnClickType.DELETE_SETTING, false));
     }
 
-    private void setCalibrationProgress(final float progress) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setPointAnimationPower(progress);
-            }
-        });
+    public class ListItem {
+        private String itemName;
+        public boolean isSwitch;
+        public OnClickType onClickType;
+
+        private ListItem(String itemName, OnClickType onClickType, boolean isSwitch) {
+            this.itemName = itemName;
+            this.onClickType = onClickType;
+            this.isSwitch = isSwitch;
+        }
+
+        public String getItemName() {
+            return this.itemName;
+        }
+        public OnClickType getOnClickType() {
+            return this.onClickType;
+        }
     }
 
-    private void hideCalibrationView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                viewCalibration.setVisibility(View.INVISIBLE);
-//                menuBar.setVisibility(View.VISIBLE);
-            }
-        });
-    }
+    public class SettingAdapter extends BaseAdapter {
+        Context mContext;
+        LayoutInflater mLayoutInflater;
+        ArrayList<SettingActivity.ListItem> mData;
 
-    private void setViewAtGazeTrackerState() {
-//        Log.i(TAG, "gaze : " + isGazeNonNull() + ", tracking " + isTracking());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!isTracking()) {
-                    hideCalibrationView();
+        public SettingAdapter(Context context, ArrayList<SettingActivity.ListItem> data) {
+            mContext = context;
+            mData = data;
+            mLayoutInflater = LayoutInflater.from(mContext);
+        }
+
+        @Override
+        public int getCount() {
+            return mData.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mData.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (mData.get(position).isSwitch) {
+                convertView = mLayoutInflater.inflate(R.layout.switch_item, null);
+                Switch switchView = convertView.findViewById(R.id.itemSwitch);
+                switchView.setText(mData.get(position).getItemName());
+
+                OnClickType onClickType = mData.get(position).getOnClickType();
+                switch (onClickType) {
+                    case GAZE_VIEW_STATUS:
+                        switchView.setChecked(GazeViewStatus);
+                        break;
+                    case INIT_STATUS:
+                        switchView.setChecked(InitStatus);
+                        break;
+                    default:
+                        break;
                 }
+
+                switchView.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener(){
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        switch (onClickType) {
+                            case GAZE_VIEW_STATUS:
+                                GazeViewStatus = !GazeViewStatus;
+                                showToast("포인터 활성화 " + ((GazeViewStatus) ? "설정" : "해제"), true);
+                                break;
+                            case INIT_STATUS:
+                                InitStatus = !InitStatus;
+                                showToast("시작 시 동체스캔 " + ((InitStatus) ? "설정" : "해제"), true);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+            } else {
+                convertView = mLayoutInflater.inflate(R.layout.text_item, null);
+                TextView textView = convertView.findViewById(R.id.itemText);
+                textView.setText(mData.get(position).getItemName());
+
+                textView.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        OnClickType onClickType = mData.get(position).getOnClickType();
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        switch (onClickType) {
+                            case START_CALIBRATION:
+                                intent.putExtra("ActiveCalibration", true);
+                                intent.putExtra("GazeViewStatus", GazeViewStatus);
+                                intent.putExtra("InitStatus", InitStatus);
+                                startActivity(intent);
+                                finish();
+                                break;
+                            case SAVE_SETTING:
+                                showToast("설정 저장 완료", true);
+                                intent.putExtra("GazeViewStatus", GazeViewStatus);
+                                intent.putExtra("InitStatus", InitStatus);
+                                startActivity(intent);
+                                finish();
+                                break;
+                            case DELETE_SETTING:
+                                showToast("설정 삭제 완료", true);
+                                intent.putExtra("GazeViewStatus", false);
+                                intent.putExtra("InitStatus", true);
+                                startActivity(intent);
+                                finish();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
             }
-        });
+
+            return convertView;
+        }
     }
-    // view end
-
-    // gazeTracker
-    private boolean isTracking() {
-        if (isGazeNonNull()) {
-            return gazeTracker.isTracking();
-        }
-        return false;
-    }
-
-    private boolean isGazeNonNull() {
-        return gazeTracker != null;
-    }
-
-    private CalibrationCallback calibrationCallback = new CalibrationCallback() {
-        @Override
-        public void onCalibrationProgress(float progress) {
-            setCalibrationProgress(progress);
-        }
-
-        @Override
-        public void onCalibrationNextPoint(final float x, final float y) {
-            setCalibrationPoint(x, y);
-            // Give time to eyes find calibration coordinates, then collect data samples
-            backgroundHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startCollectSamples();
-                }
-            }, 1000);
-        }
-
-        @Override
-        public void onCalibrationFinished(double[] calibrationData) {
-            // 캘리브레이션이 끝나면 자동으로 gazepoint에 적용되어있고
-            // calibrationDataStorage에 calibrationData를 넣는것은 다음번에 캘리브레이션 하지않고 사용하게 하기 위함이다.
-            CalibrationDataStorage.saveCalibrationData(getApplicationContext(), calibrationData);
-            hideCalibrationView();
-            showToast("calibrationFinished", true);
-        }
-    };
 }
