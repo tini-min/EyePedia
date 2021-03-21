@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -132,11 +133,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        SettingActivity SA = (SettingActivity) SettingActivity.SetActivity;
-        //if (SA != null) SA.finish();
-
+        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
+        initView();
         startTracking();
-        //gazeTrackerManager.setGazeTrackerCallbacks(gazeCallback, calibrationCallback, statusCallback);
+        Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
@@ -146,8 +147,6 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getBooleanExtra("ActiveCalibration", false)) {
             startCalibration();
         }
-        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
-        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         Log.i(TAG, "onResume");
     }
 
@@ -280,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
     private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
     private PointView viewPoint;
+    private TextView translatedText;
     private CalibrationViewer viewCalibration;
     private AppBarLayout menuBar;
     private GazePathView gazePathView;
@@ -296,8 +296,14 @@ public class MainActivity extends AppCompatActivity {
         viewCalibration = findViewById(R.id.view_calibration);
         menuBar = findViewById(R.id.menu_bar);
 
+        translatedText = findViewById(R.id.translated_text);
+
         gazePathView.setVisibility((GazeViewStatus)? View.VISIBLE : View.INVISIBLE);
         setOffsetOfView();
+    }
+
+    public void setText(String text) {
+        translatedText.setText(text);
     }
 
     private void setOffsetOfView() {
@@ -424,6 +430,7 @@ public class MainActivity extends AppCompatActivity {
         this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
+        if (InitStatus) startCalibration();
     }
 
     private void initFail(InitializationErrorType error) {
@@ -597,7 +604,8 @@ public class MainActivity extends AppCompatActivity {
 
         String licenseKey = "dev_6223o6dqrnnywdbl55htd5mr26jv9fi08qskthlp";
         GazeTracker.initGazeTracker(getApplicationContext(), gazeDevice, licenseKey, initializationCallback);
-        if (InitStatus) startCalibration();
+
+//        if (InitStatus) startCalibration();
     }
 
     private void releaseGaze() {
