@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        //, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet.
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
@@ -17,30 +18,31 @@
             android:bufferType="spannable"
             android:lineSpacingExtra="20dp"
             android:padding="30dp"
-            android:text="A king with no subjects, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet."
+            android:text="A king with no subjects, who has. Do you know shmin?"
             android:textSize="20sp"
             android:fontFamily="@font/font_basic"
             android:textColor="@color/black"
             android:textColorLink="@color/black"
-            app:layout_constraintBottom_toTopOf="@+id/button"
+            app:layout_constraintBottom_toTopOf="@+id/button_input"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintVertical_bias="1.0"
+        />
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/button_input"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:onClick="mOnFileRead"
             android:text="파일읽기"
             android:fontFamily="@font/font_basic"
             android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
