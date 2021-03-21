@@ -211,6 +211,7 @@ public class SettingActivity extends AppCompatActivity {
                             case START_CALIBRATION:
                                 intent.putExtra("ActiveCalibration", true);
                                 intent.putExtra("GazeViewStatus", GazeViewStatus);
+                                intent.putExtra("TrackingStatus", true);
                                 intent.putExtra("InitStatus", InitStatus);
                                 startActivity(intent);
                                 finish();
@@ -218,6 +219,7 @@ public class SettingActivity extends AppCompatActivity {
                             case SAVE_SETTING:
                                 showToast("설정 저장 완료", true);
                                 intent.putExtra("GazeViewStatus", GazeViewStatus);
+                                intent.putExtra("TrackingStatus", TrackingStatus);
                                 intent.putExtra("InitStatus", InitStatus);
                                 startActivity(intent);
                                 finish();
@@ -225,6 +227,7 @@ public class SettingActivity extends AppCompatActivity {
                             case DELETE_SETTING:
                                 showToast("설정 삭제 완료", true);
                                 intent.putExtra("GazeViewStatus", false);
+                                intent.putExtra("TrackingStatus", true);
                                 intent.putExtra("InitStatus", true);
                                 startActivity(intent);
                                 finish();

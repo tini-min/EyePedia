@@ -27,15 +27,24 @@
             android:paddingLeft="15dp"
             android:paddingRight="15dp"
             android:text="번역할 문장을 주시해 주세요!" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
-    <FrameLayout
-        android:id="@+id/fragment_text"
-        android:name="com.example.eyepedia.activity.TextFragment"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fragment_cover"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"></FrameLayout>
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/fragment_text"
+            android:name="com.example.eyepedia.activity.TextFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"></FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 시선 좌표 -->
     <com.example.eyepedia.view.GazePathView

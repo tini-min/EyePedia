@@ -1,6 +1,7 @@
 package com.example.eyepedia.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -23,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 
@@ -75,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
         //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
-        initView();
         checkPermission();
+        initView();
         initHandler();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -277,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
     //view
     private CoordinatorLayout backgroundLayout;
+    private ConstraintLayout fragmentCover;
     private View layoutProgress;
     private PointView viewPoint;
     private TextView translatedText;
@@ -288,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         backgroundLayout = findViewById(R.id.layout_background);
+        fragmentCover = findViewById(R.id.fragment_cover);
         layoutProgress = findViewById(R.id.layout_progress);
         layoutProgress.setOnClickListener(null);
 
@@ -299,6 +303,14 @@ public class MainActivity extends AppCompatActivity {
         translatedText = findViewById(R.id.translated_text);
 
         gazePathView.setVisibility((GazeViewStatus)? View.VISIBLE : View.INVISIBLE);
+        backgroundLayout.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
+
         setOffsetOfView();
     }
 
