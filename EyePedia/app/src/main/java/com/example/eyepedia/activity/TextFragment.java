@@ -63,6 +63,24 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+
 import static android.app.Activity.RESULT_OK;
 
 //implements View.OnClickListener
@@ -74,7 +92,81 @@ public class TextFragment extends Fragment  {
     private static final int PICK_PDF_FILE = 2;
     private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
     boolean uriToLoad;
-    private BreakIterator target_translation_word;
+
+
+    private EditText translationText;
+    private Button translationButton;
+    private TextView resultText;
+    private String result;
+
+    class BackgroundTask extends AsyncTask<Integer, Integer, Integer> {
+        protected void onPreExecute() {
+        }
+
+        @Override
+        protected Integer doInBackground(Integer... arg0) {
+            StringBuilder output = new StringBuilder();
+            String clientId = "lW72OjMsgLdaTMMxlzzh"; // 애플리케이션 클라이언트 아이디 값";
+            String clientSecret = "0ejOfnbVHH"; // 애플리케이션 클라이언트 시크릿 값";
+            try {
+                // 번역문을 UTF-8으로 인코딩합니다.
+                String text = URLEncoder.encode(translationText.getText().toString(), "UTF-8");
+                String apiURL = "https://openapi.naver.com/v1/papago/n2mt";
+
+                // 파파고 API와 연결을 수행합니다.
+                URL url = new URL(apiURL);
+                HttpURLConnection con = (HttpURLConnection)url.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("X-Naver-Client-Id", clientId);
+                con.setRequestProperty("X-Naver-Client-Secret", clientSecret);
+
+                // 번역할 문장을 파라미터로 전송합니다.
+                String postParams = "source=en&target=ko&text=" + text;
+                con.setDoOutput(true);
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(postParams);
+                wr.flush();
+                wr.close();
+
+                // 번역 결과를 받아옵니다.
+                int responseCode = con.getResponseCode();
+                BufferedReader br;
+                if(responseCode == 200) {
+                    br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                } else {
+                    br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+                }
+                String inputLine;
+                while ((inputLine = br.readLine()) != null) {
+                    output.append(inputLine);
+                }
+                br.close();
+            } catch(Exception ex) {
+                Log.e("SampleHTTP", "Exception in processing response.", ex);
+                ex.printStackTrace();
+            }
+            result = output.toString();
+            return null;
+        }
+
+        protected void onPostExecute(Integer a) {
+            JsonParser parser = new JsonParser();
+            JsonElement element = parser.parse(result);
+            if(element.getAsJsonObject().get("errorMessage") != null) {
+                Log.e("번역 오류", "번역 오류가 발생했습니다. " +
+                        "[오류 코드: " + element.getAsJsonObject().get("errorCode").getAsString() + "]");
+            } else if(element.getAsJsonObject().get("message") != null) {
+                // 번역 결과 출력
+                resultText.setText(element.getAsJsonObject().get("message").getAsJsonObject().get("result")
+                        .getAsJsonObject().get("translatedText").getAsString());
+            }
+
+        }
+
+    }
+
+
+
 
     public TextFragment() {
         // Required empty public constructor
@@ -84,25 +176,41 @@ public class TextFragment extends Fragment  {
         super.onCreate(savedInstanceState);
     }
 
+    public void exonClick(View view) {};
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_text, container, false);
 
+        translationText = (EditText) view.findViewById(R.id.translationText);
+        translationButton = (Button) view.findViewById(R.id.translationButton);
+        resultText = (TextView) view.findViewById(R.id.resultText);
+
+        translationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new BackgroundTask().execute();
+            }
+        });
+
         view.findViewById(R.id.explicit_button).setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
                 Toast.makeText(getActivity(), "명시적 인텐트", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//                intent.addCategory(Intent.CATEGORY_OPENABLE);
+//                intent.putExtra("content", "해보자!");
+//                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
+
+                Intent intent = new Intent(getActivity().getApplicationContext(),SubActivity.class);
                 intent.setType("text/*");
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra("content", "해보자!");
-
-                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-
-
+                intent.putExtra("Name","BAD");
+                startActivity(intent);
+//                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
             }
         });
         view.findViewById(R.id.implicit_button).setOnClickListener(new View.OnClickListener() {
@@ -137,10 +245,10 @@ public class TextFragment extends Fragment  {
         textView = (TextView) view.findViewById(R.id.textView);
 
         // 100 줄의 텍스트를 생성합니다.
-        String text = "";
-        for(int i=0; i<20; i++)
-            text += i + "\n";
-        textView.setText(text);
+//        String text = "";
+//        for(int i=0; i<20; i++)
+//            text += i + "\n";
+//        textView.setText(text);
 //
         return view;
     }
@@ -183,16 +291,6 @@ public class TextFragment extends Fragment  {
             }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
-    @SuppressLint("HandlerLeak")
-    Handler papago_handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            Bundle bundle = msg.getData();
-            String resultWord = bundle.getString("resultWord");
-            result_translation.setText(resultWord);
-            //Toast.makeText(getApplicationContext(),resultWord,Toast.LENGTH_SHORT).show();
-        }
-    };
 
 
 

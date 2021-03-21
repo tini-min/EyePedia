@@ -24,7 +24,7 @@
                 android:layout_height="0dp"
                 android:bufferType="spannable"
                 android:lineSpacingExtra="20dp"
-                android:padding="30dp"
+                android:padding="50dp"
                 android:text="A king with no subjects, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet."
                 android:textSize="20sp"
                 app:layout_constraintBottom_toTopOf="@+id/button"
@@ -36,18 +36,43 @@
 
         </ScrollView>
 
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/button_to_translation"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="80dp"
-            android:text="번역"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+                <EditText
+                    android:id="@+id/translationText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ems="10"
+                    android:hint="번역할 문장"
+                    android:inputType="text" />
 
+                <Button
+                    android:id="@+id/translationButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="번역하기" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/resultText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="번역 결과" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/implicit_button"
@@ -65,9 +90,11 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:text="명시적 읽기"
+            android:onClick="exonClick"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

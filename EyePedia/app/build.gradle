@@ -43,5 +43,7 @@ dependencies {
     implementation project(':gazetracker-release')
     implementation 'gun0912.ted:tedpermission:2.0.0'
 
-
+}
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
 }
