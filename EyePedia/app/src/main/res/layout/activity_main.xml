@@ -30,7 +30,6 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/fragment_cover"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -40,10 +39,21 @@
             android:name="com.example.eyepedia.activity.TextFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"></FrameLayout>
+            app:layout_constraintTop_toTopOf="parent" >
+
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fragment_cover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 시선 좌표 -->

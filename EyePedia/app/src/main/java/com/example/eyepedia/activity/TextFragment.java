@@ -1,9 +1,12 @@
 package com.example.eyepedia.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -17,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.eyepedia.Menu_papago;
 import com.example.eyepedia.R;
 
 import java.text.BreakIterator;
@@ -50,10 +54,9 @@ public class TextFragment extends Fragment  {
 
         View view = inflater.inflate(R.layout.fragment_text, container, false);
 
-        view.findViewById(R.id.explicit_button).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.load_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getActivity(), "명시적 인텐트", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.setType("text/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -61,44 +64,13 @@ public class TextFragment extends Fragment  {
                 intent.putExtra("content", "해보자!");
 
                 startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-
-
             }
         });
-        view.findViewById(R.id.implicit_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity(), "암시적 인텐트", Toast.LENGTH_SHORT).show();
-
-                //암시적 인텐트 목적에 맞는 호출 : 지도보기, 연락처보기, 인터넷, SNS 공유 등등.
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/"));
-                startActivity(intent);
-            }
-        });
-//        view.findViewById(R.id.button_to_translation).setOnClickListener(new View.OnClickListener() {
-//        @Override
-//        public void onClick(View view) {
-//            new Thread(){
-//                @Override
-//                public void run() {
-//                    String word = target_translation_word.getText().toString();
-//                    Menu_papago papago = new Menu_papago();
-//                    String resultWord;
-//                    resultWord= papago.getTranslation(word,"en","ko");
-//
-//                    Bundle papagoBundle = new Bundle();
-//                    papagoBundle.putString("resultWord",resultWord);
-//
-//                    Message msg = papago_handler.obtainMessage();
-//                    msg.setData(papagoBundle);
-//                    papago_handler.sendMessage(msg);
-//                }
-//            }.start();
         textView = (TextView) view.findViewById(R.id.textView);
-
 //
         return view;
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
         if (requestCode == OPEN_DIRECTORY_REQUEST_CODE
@@ -118,35 +90,56 @@ public class TextFragment extends Fragment  {
 
         Spannable spannable = (Spannable) textView.getText();
         String content = textView.getText().toString();
-        String[] strArray = content.split("\\.");
+        String[] strArray = content.split("\\.|\\?");
         List<Integer> indArray = new ArrayList<Integer>();
         for (String str : strArray) {
-            indArray.add(content.indexOf(str));
+            if (indArray.isEmpty()) {
+                indArray.add(content.indexOf(str));
+            } else indArray.add(content.indexOf(str, indArray.get(indArray.size()-1)));
         }
         indArray.add(content.length());
 
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         for (int i = 0; i < indArray.size() - 1; i++) {
             int finalI = i;
+            Log.i(TAG, String.valueOf(content.length()) + " / " + indArray.get(finalI) + " / " + indArray.get(finalI+1));
+            Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    ((MainActivity)getActivity()).setText(content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            if (((MainActivity)getActivity()).TranslateStatus) {
+                                String word = content.substring(indArray.get(finalI), indArray.get(finalI + 1));
+                                Menu_papago papago = new Menu_papago();
+                                String resultWord;
+                                resultWord = papago.getTranslation(word, "en", "ko");
+
+                                Bundle papagoBundle = new Bundle();
+                                papagoBundle.putString("resultWord", resultWord);
+
+                                Message msg = papago_handler.obtainMessage();
+                                msg.setData(papagoBundle);
+                                papago_handler.sendMessage(msg);
+                            }
+                        }
+                    }.start();
                     Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
                 }
             }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
-//    @SuppressLint("HandlerLeak")
-//    Handler papago_handler = new Handler(){
-//        @Override
-//        public void handleMessage(Message msg) {
-//            Bundle bundle = msg.getData();
-//            String resultWord = bundle.getString("resultWord");
-//            result_translation.setText(resultWord);
-//            //Toast.makeText(getApplicationContext(),resultWord,Toast.LENGTH_SHORT).show();
-//        }
-//    };
+    @SuppressLint("HandlerLeak")
+    Handler papago_handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            Bundle bundle = msg.getData();
+            String resultWord = bundle.getString("resultWord");
+            //result_translation.setText(resultWord);
+            ((MainActivity)getActivity()).setText(resultWord);
+        }
+    };
 
 
 
