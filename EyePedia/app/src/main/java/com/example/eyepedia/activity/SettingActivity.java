@@ -25,9 +25,9 @@ public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
     private ArrayList<ListItem> SettingDataList;
     private enum OnClickType {
-        START_CALIBRATION, GAZE_VIEW_STATUS, INIT_STATUS, SAVE_SETTING, DELETE_SETTING
+        START_CALIBRATION, GAZE_VIEW_STATUS, TRAKING_STATUS, INIT_STATUS, SAVE_SETTING, DELETE_SETTING
     }
-    private boolean GazeViewStatus, InitStatus;
+    private boolean GazeViewStatus, TrackingStatus, InitStatus;
     public static Activity SetActivity;
 
     @Override
@@ -48,8 +48,9 @@ public class SettingActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+        TrackingStatus = getIntent().getBooleanExtra("TrackingStatus", true);
         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
-        Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
+        //Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
@@ -80,9 +81,10 @@ public class SettingActivity extends AppCompatActivity {
     public void onBackPressed() {
         Intent mIntent = new Intent();
         mIntent.putExtra("GazeViewStatus", GazeViewStatus);
+        mIntent.putExtra("TrackingStatus", TrackingStatus);
         mIntent.putExtra("InitStatus", InitStatus);
 
-        Log.i("MainActivityNot",String.valueOf(GazeViewStatus) + " / " + InitStatus);
+        //Log.i(TAG,String.valueOf(GazeViewStatus) + " / " + InitStatus);
 
         setResult(Activity.RESULT_OK, mIntent);
         finish();
@@ -99,9 +101,10 @@ public class SettingActivity extends AppCompatActivity {
 
     public void InitializeSettingData() {
         SettingDataList = new ArrayList<ListItem>();
-        SettingDataList.add(new ListItem("정확도 향상", OnClickType.START_CALIBRATION, false));
+        SettingDataList.add(new ListItem("동체스캔(정확도 향상)", OnClickType.START_CALIBRATION, false));
         SettingDataList.add(new ListItem("포인터 활성화", OnClickType.GAZE_VIEW_STATUS, true));
-        SettingDataList.add(new ListItem("시작 시 정확도 향상", OnClickType.INIT_STATUS, true));
+        SettingDataList.add(new ListItem("아이트랙킹 활성화", OnClickType.TRAKING_STATUS, true));
+        SettingDataList.add(new ListItem("시작 시 동체스캔 활성화", OnClickType.INIT_STATUS, true));
         SettingDataList.add(new ListItem("설정 저장", OnClickType.SAVE_SETTING, false));
         SettingDataList.add(new ListItem("설정 삭제", OnClickType.DELETE_SETTING, false));
     }
@@ -163,6 +166,9 @@ public class SettingActivity extends AppCompatActivity {
                     case GAZE_VIEW_STATUS:
                         switchView.setChecked(GazeViewStatus);
                         break;
+                    case TRAKING_STATUS:
+                        switchView.setChecked(TrackingStatus);
+                        break;
                     case INIT_STATUS:
                         switchView.setChecked(InitStatus);
                         break;
@@ -177,6 +183,10 @@ public class SettingActivity extends AppCompatActivity {
                             case GAZE_VIEW_STATUS:
                                 GazeViewStatus = !GazeViewStatus;
                                 showToast("포인터 활성화 " + ((GazeViewStatus) ? "설정" : "해제"), true);
+                                break;
+                            case TRAKING_STATUS:
+                                TrackingStatus = !TrackingStatus;
+                                showToast("아이트랙킹 활성화 " + ((TrackingStatus) ? "설정" : "해제"), true);
                                 break;
                             case INIT_STATUS:
                                 InitStatus = !InitStatus;
