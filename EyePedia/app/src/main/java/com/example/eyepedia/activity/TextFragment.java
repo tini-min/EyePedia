@@ -1,5 +1,6 @@
 package com.example.eyepedia.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Spannable;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -25,9 +27,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.eyepedia.Readurl;
+
 public class TextFragment extends Fragment {
     @Nullable
     private static final String TAG = TextFragment.class.getSimpleName();
+    private static final int OPEN_DIRECTORY_REQUEST_CODE = 10;
     private TextView textView;
     final static String filePath = Environment.DIRECTORY_DOWNLOADS+"/test.txt";
 
@@ -46,8 +51,27 @@ public class TextFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_text, container, false);
         textView = (TextView) view.findViewById(R.id.textView);
 
+        view.findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getActivity(), "파일 불러옴", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//                intent.addCategory(Intent.CATEGORY_OPENABLE);
+//                intent.putExtra("content", "해보자!");
+
+//                Intent intent = new Intent(getActivity().getApplicationContext(),SubActivity.class);
+                intent.setType("text/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.putExtra("Name","BAD");
+                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
+//                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
+                Readurl.main();
+            }
+        });
         return view;
     }
+
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 

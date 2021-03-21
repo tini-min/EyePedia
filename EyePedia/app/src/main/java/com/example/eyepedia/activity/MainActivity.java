@@ -430,7 +430,7 @@ public class MainActivity extends AppCompatActivity {
         this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
-        if (InitStatus) startCalibration();
+//        if (InitStatus) startCalibration();
     }
 
     private void initFail(InitializationErrorType error) {
