@@ -35,5 +35,9 @@
         <activity
             android:name=".activity.SettingActivity"
             android:label="Settings"/>
+        <activity
+            android:name=".activity.SubActivity"
+            android:label="SubActivity"
+            />
     </application>
 </manifest>
