@@ -1,0 +1,10 @@
+diff a/EyePedia/app/src/main/AndroidManifest.xml b/EyePedia/app/src/main/AndroidManifest.xml	(rejected hunks)
+@@ -32,6 +32,6 @@
+ 
+         <activity
+             android:name=".activity.SettingActivity"
+-            android:label="Settings"/>
++            android:label="@string/action_settings" />
+     </application>
+ </manifest>
+\ No newline at end of file
