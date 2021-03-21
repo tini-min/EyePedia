@@ -33,6 +33,7 @@ import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
+import com.google.android.material.appbar.AppBarLayout;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -54,9 +55,6 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
-
 // mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
 public class MainActivity extends AppCompatActivity {
@@ -75,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
     private ImageView imageView;
-
-
 
     Context context;
 
@@ -135,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
         if (InitStatus) startCalibration();
         setOffsetOfView();
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

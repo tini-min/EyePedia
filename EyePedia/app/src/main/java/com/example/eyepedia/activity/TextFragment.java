@@ -1,14 +1,9 @@
 package com.example.eyepedia.activity;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Build;
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.provider.DocumentsContract;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
@@ -17,9 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,43 +19,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.eyepedia.R;
-import com.example.eyepedia.Menu_papago;
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
-import android.os.Bundle;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import android.content.Intent;
-import android.net.Uri;
 //import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-
-import static android.app.Activity.RESULT_OK;
 
 //implements View.OnClickListener
 public class TextFragment extends Fragment  {
@@ -136,11 +97,6 @@ public class TextFragment extends Fragment  {
 //            }.start();
         textView = (TextView) view.findViewById(R.id.textView);
 
-        // 100 줄의 텍스트를 생성합니다.
-        String text = "";
-        for(int i=0; i<20; i++)
-            text += i + "\n";
-        textView.setText(text);
 //
         return view;
     }
@@ -183,16 +139,16 @@ public class TextFragment extends Fragment  {
             }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
-    @SuppressLint("HandlerLeak")
-    Handler papago_handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            Bundle bundle = msg.getData();
-            String resultWord = bundle.getString("resultWord");
-            result_translation.setText(resultWord);
-            //Toast.makeText(getApplicationContext(),resultWord,Toast.LENGTH_SHORT).show();
-        }
-    };
+//    @SuppressLint("HandlerLeak")
+//    Handler papago_handler = new Handler(){
+//        @Override
+//        public void handleMessage(Message msg) {
+//            Bundle bundle = msg.getData();
+//            String resultWord = bundle.getString("resultWord");
+//            result_translation.setText(resultWord);
+//            //Toast.makeText(getApplicationContext(),resultWord,Toast.LENGTH_SHORT).show();
+//        }
+//    };
 
 
 
