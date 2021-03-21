@@ -10,29 +10,61 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:bufferType="spannable"
-            android:lineSpacingExtra="20dp"
-            android:padding="30dp"
-            android:text="A king with no subjects, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet."
-            android:textSize="20sp"
-            app:layout_constraintBottom_toTopOf="@+id/button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity ="center"
+            android:fillViewport="true"
+            android:layout_marginTop="0dp"
+            android:id="@+id/scrollView">
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:bufferType="spannable"
+                android:lineSpacingExtra="20dp"
+                android:padding="30dp"
+                android:text="A king with no subjects, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet."
+                android:textSize="20sp"
+                app:layout_constraintBottom_toTopOf="@+id/button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+        </ScrollView>
+
+
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/button_to_translation"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="80dp"
+            android:text="번역"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+        <Button
+            android:id="@+id/implicit_button"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="80dp"
+            android:text="암시적 읽기"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/explicit_button"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:onClick="mOnFileRead"
-            android:text="파일읽기"
+            android:text="명시적 읽기"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
