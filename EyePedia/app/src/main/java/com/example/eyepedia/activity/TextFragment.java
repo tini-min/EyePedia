@@ -66,7 +66,7 @@ public class TextFragment extends Fragment {
                 intent.putExtra("Name","BAD");
                 startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
 //                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-                Readurl.main();
+                Readurl readurl = new Readurl();
             }
         });
         return view;
