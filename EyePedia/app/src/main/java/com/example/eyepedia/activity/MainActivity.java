@@ -1,7 +1,6 @@
 package com.example.eyepedia.activity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -24,6 +23,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,8 +40,6 @@ import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
 import com.google.android.material.appbar.AppBarLayout;
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -49,7 +47,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -67,7 +66,7 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity<constant> extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
@@ -82,11 +81,23 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
+    // RequestCode 선언
+    static class RequestCode {
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef({Setting_Open, Popup_Normal, Popup_Select, Popup_Error, Popup_Image, Load_txtFile})
+        public @interface types {}
+
+        public static final int Setting_Open = 0;
+        public static final int Popup_Normal = 1;
+        public static final int Popup_Select = 2;
+        public static final int Popup_Error = 3;
+        public static final int Popup_Image = 4;
+        public static final int Load_txtFile = 5;
+    }
+
     // popup
     private Button btn_show_popup2;
 
-    // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
-    // 앱이 켜짐으로써 시작되는 함수
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,16 +111,15 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit(); // 텍스트 프래그먼트 띄우기
 
+        // 저장된 설정 변수 읽어오기
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
         TranslateStatus = settings.getBoolean("TranslateStatus", true);
         InitStatus = settings.getBoolean("InitStatus", true);
         OnActivated = settings.getBoolean("OnActivated", false);
         FirstActivated = settings.getBoolean("FirstActivated", true);
-
-        context = this.getBaseContext(); //heo
 
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
@@ -119,13 +129,6 @@ public class MainActivity extends AppCompatActivity {
         btn_show_popup2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
-//                intent.putExtra("type", PopupType.NORMAL);
-//                intent.putExtra("gravity", PopupGravity.CENTER);
-//                intent.putExtra("title", "알림");
-//                intent.putExtra("content", "빨간 점을 바라봐주세요!\n인식 정확도를 높여주는 기능입니다!!");
-//                intent.putExtra("buttonCenter", "종료");
-//                startActivityForResult(intent, 1);
                 PopupWindow InfoPopup;
                 View popupView = getLayoutInflater().inflate(R.layout.activity_popup, null);
                 InfoPopup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -161,17 +164,13 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
             intent.putExtra("GazeViewStatus", GazeViewStatus);
             intent.putExtra("TranslateStatus", TranslateStatus);
             intent.putExtra("InitStatus", InitStatus);
             startActivityForResult(intent, 0);
-
-            Log.i(TAG + "넘김", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -183,78 +182,38 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             PopupResult result = (PopupResult) data.getSerializableExtra("result");
             switch (requestCode) {
-                case 0 :
+                case RequestCode.Setting_Open :
                     GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
                     TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
                     InitStatus = data.getBooleanExtra("InitStatus", true);
                     break;
-                case 1 :
-                    if(result == PopupResult.CENTER){
-                        //showToast("CENTER", true);
-                    }
+                case RequestCode.Popup_Normal :
+                    if(result == PopupResult.CENTER) //showToast("CENTER", true);
                     break;
-                case 2 :
-                    if(result == PopupResult.LEFT){
-                        showToast("LEFT", true);
-                    }
-                    else if(result == PopupResult.RIGHT){
-                        showToast("RIGHT", true);
-                    }
+                case RequestCode.Popup_Select :
+                    if(result == PopupResult.LEFT) showToast("LEFT", true);
+                    else if(result == PopupResult.RIGHT) showToast("RIGHT", true);
                     break;
-                case 3 :
-                    if(result == PopupResult.CENTER){
-                        showToast("CENTER", true);
-                    }
+                case RequestCode.Popup_Error :
+                    if(result == PopupResult.CENTER) showToast("CENTER", true);
                     break;
-                case 4 :
-                    if(result == PopupResult.LEFT){
-                        showToast("LEFT", true);
-
-                    } else if(result == PopupResult.RIGHT){
-                        showToast("RIGHT", true);
-
-                    } else if(result == PopupResult.IMAGE){
-                        showToast("IMAGE", true);
-                    }
+                case RequestCode.Popup_Image :
+                    if(result == PopupResult.LEFT) showToast("LEFT", true);
+                    else if(result == PopupResult.RIGHT) showToast("RIGHT", true);
+                    else if(result == PopupResult.IMAGE) showToast("IMAGE", true);
                     break;
-                default :
+                case RequestCode.Load_txtFile :
                     TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
                     textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
                     Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18));
                     Log.i(TAG, (ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18))));
                     break;
+                default :
+                    Log.i(TAG, "ELSE");
+                    break;
             }
         }
         Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
-    }
-
-    // 저장 권한
-    Context context;
-    PermissionListener permissionlistener = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() {
-            Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-            Toast.makeText(MainActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
-        }
-    };
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
-            TedPermission.with(this)
-                    .setPermissionListener(permissionlistener)
-                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
-                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
-                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.READ_CONTACTS
-                    })
-                    .check();
-
-        } else { initView();}
     }
 
     public String ReadTextFile(String path){
@@ -697,7 +656,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-//                Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState);
             }
         }
     };
@@ -810,31 +768,5 @@ public class MainActivity extends AppCompatActivity {
         }
         setViewAtGazeTrackerState();
         return isSuccess;
-    }
-
-    private void stopCalibration() {
-        if (isGazeNonNull()) {
-            gazeTracker.stopCalibration();
-        }
-        hideCalibrationView();
-        setViewAtGazeTrackerState();
-    }
-
-    private void setCalibration() {
-        if (isGazeNonNull()) {
-            double[] calibrationData = CalibrationDataStorage.loadCalibrationData(getApplicationContext());
-            if (calibrationData != null) {
-                // When if stored calibration data in SharedPreference
-                if (!gazeTracker.setCalibrationData(calibrationData)) {
-                    showToast("calibrating", false);
-                } else {
-                    showToast("setCalibrationData success", false);
-                }
-            } else {
-                // When if not stored calibration data in SharedPreference
-                showToast("Calibration data is null", true);
-            }
-        }
-        setViewAtGazeTrackerState();
     }
 }

@@ -31,6 +31,8 @@ public class SettingActivity extends AppCompatActivity {
     private boolean reset = false;
     public static Activity SetActivity;
 
+    public static MainActivity.RequestCode RequestCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +53,6 @@ public class SettingActivity extends AppCompatActivity {
         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
         TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
-        //Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
@@ -216,25 +217,14 @@ public class SettingActivity extends AppCompatActivity {
                                 finish();
                                 break;
                             case DELETE_SETTING:
-//                                Intent popupIntent = new Intent(getBaseContext(), PopupActivity.class);
-//                                intent.putExtra("type", PopupType.SELECT);
-//                                intent.putExtra("gravity", PopupGravity.LEFT);
-//                                intent.putExtra("title", "경고");
-//                                intent.putExtra("content", "모든 설정을 초기화하겠습니까?");
-//                                intent.putExtra("buttonLeft", "예");
-//                                intent.putExtra("buttonRight", "아니오");
-//                                startActivityForResult(popupIntent, 1);
-
-                                //if (reset) {
-                                    showToast("설정 초기화 완료", true);
-                                    intent.putExtra("GazeViewStatus", false);
-                                    intent.putExtra("TranslateStatus", true);
-                                    intent.putExtra("InitStatus", true);
-                                    intent.putExtra("Clicked", true);
+                                showToast("설정 초기화 완료", true);
+                                intent.putExtra("GazeViewStatus", false);
+                                intent.putExtra("TranslateStatus", true);
+                                intent.putExtra("InitStatus", true);
+                                intent.putExtra("Clicked", true);
                                 Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
                                 startActivity(intent);
                                 finish();
-                                //}
                                 break;
                             default:
                                 break;
@@ -246,15 +236,4 @@ public class SettingActivity extends AppCompatActivity {
             return convertView;
         }
     }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if (requestCode == 1){
-//            if (resultCode == RESULT_OK) {
-//                reset = data.getBooleanExtra("buttonLeft", true);
-//            } else showToast("설정 초기화 실패", true);
-//        }
-//    }
 }
