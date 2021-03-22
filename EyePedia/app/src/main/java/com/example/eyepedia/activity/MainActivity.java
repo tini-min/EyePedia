@@ -16,12 +16,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-<<<<<<< HEAD
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-=======
 import android.widget.TextView;
->>>>>>> temp
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,14 +36,11 @@ import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
-<<<<<<< HEAD
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import java.util.ArrayList;
-=======
 import com.google.android.material.appbar.AppBarLayout;
->>>>>>> temp
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -64,14 +58,11 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-<<<<<<< HEAD
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 // mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
-=======
->>>>>>> temp
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
@@ -143,18 +134,11 @@ public class MainActivity extends AppCompatActivity {
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
         InitStatus = settings.getBoolean("InitStatus", true);
 
-<<<<<<< HEAD
         context = this.getBaseContext();
-
         checkPermissions();
-    }
 
-
-
-=======
         setOffsetOfView();
     }
->>>>>>> temp
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -348,15 +332,12 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
-<<<<<<< HEAD
     //private CoordinatorLayout backgroundLayout;
     // class : 개인이 정의한 객체 / Java가 객체지향 - 변수랑 함수랑 모여있는게 클래스
     private FrameLayout textLayout;
     private View layoutProgress; // class 이름
-=======
     private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
->>>>>>> temp
     private PointView viewPoint;
     private TextView translatedText;
     private CalibrationViewer viewCalibration;

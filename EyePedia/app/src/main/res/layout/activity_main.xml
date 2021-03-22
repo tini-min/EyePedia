@@ -61,9 +61,4 @@
         app:layout_anchor="@+id/preview"
         app:layout_anchorGravity="center" />
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> temp
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

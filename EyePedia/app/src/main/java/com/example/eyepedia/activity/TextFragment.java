@@ -1,6 +1,5 @@
 package com.example.eyepedia.activity;
 
-<<<<<<< HEAD
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -10,13 +9,11 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
-=======
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
->>>>>>> temp
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -41,7 +38,6 @@ import com.example.eyepedia.Constants;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.KeySets;
 import com.example.eyepedia.R;
-<<<<<<< HEAD
 import com.example.eyepedia.Menu_papago;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
@@ -55,16 +51,13 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.text.BreakIterator;
-=======
 import com.squareup.otto.Subscribe;
 
->>>>>>> temp
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-<<<<<<< HEAD
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -186,7 +179,6 @@ public class TextFragment extends Fragment  {
     }
 
 
-=======
 import butterknife.BindView;
 import butterknife.OnClick;
 
@@ -195,7 +187,6 @@ public class TextFragment extends Fragment {
     private static final String TAG = TextFragment.class.getSimpleName();
     private static final int OPEN_DIRECTORY_REQUEST_CODE = 10;
     TextView textView;
->>>>>>> temp
 
 
     public TextFragment() {
@@ -216,12 +207,6 @@ public class TextFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
-<<<<<<< HEAD
-
-    public void exonClick(View view) {};
-
-=======
->>>>>>> temp
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -288,30 +273,6 @@ public class TextFragment extends Fragment {
 //            }.start();
         textView = (TextView) view.findViewById(R.id.textView);
 
-<<<<<<< HEAD
-        // 100 줄의 텍스트를 생성합니다.
-//        String text = "";
-//        for(int i=0; i<20; i++)
-//            text += i + "\n";
-//        textView.setText(text);
-//
-        return view;
-    }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (requestCode == OPEN_DIRECTORY_REQUEST_CODE
-                && resultCode == Activity.RESULT_OK) {
-            // The result data contains a URI for the document or directory that
-            // the user selected.
-            Uri uri = null;
-            if (resultData != null) {
-                uri = resultData.getData();
-                Log.i(String.valueOf(uri), "Right?");
-                // Perform operations on the document using its URI.
-            }
-        }
-    }
-=======
         view.findViewById(R.id.button_input).setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -353,7 +314,6 @@ public class TextFragment extends Fragment {
         }
     }
 
->>>>>>> temp
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -372,47 +332,10 @@ public class TextFragment extends Fragment {
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-<<<<<<< HEAD
-                    //content.substring(indArray.get(finalI), indArray.get(finalI + 1));
-                    Toast.makeText(getActivity(), content.substring(indArray.get(finalI), indArray.get(finalI + 1)), Toast.LENGTH_LONG).show();
-                    Log.i("ansewr", content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-=======
-                    ((MainActivity)getActivity()).setText(content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
->>>>>>> temp
+                    // ((MainActivity)getActivity()).setText(content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
+                    // Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
                 }
             }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
-<<<<<<< HEAD
-
-
-
-
-//    public void mOnFileRead(){
-//        String read = ReadTextFile(filePath);
-//        textView.setText(read);
-//    }
-//
-//    public String ReadTextFile(String path) {
-//        StringBuffer strBuffer = new StringBuffer();
-//        try {
-//            InputStream is = new FileInputStream(path);
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-//            String line = "";
-//            while ((line = reader.readLine()) != null) {
-//                strBuffer.append(line + "\n");
-//            }
-//
-//            reader.close();
-//            is.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return "";
-//        }
-//        return strBuffer.toString();
-//    }
-    }
-=======
 }
->>>>>>> temp
