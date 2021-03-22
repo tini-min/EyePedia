@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     Context context;
-    PermissionListener permissionlistener = new PermissionListener() {
+    PermissionListener permissionListener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
             Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
@@ -94,11 +94,11 @@ public class MainActivity extends AppCompatActivity {
         public void onPermissionDenied(ArrayList<String> deniedPermissions) {
             Toast.makeText(MainActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
         }
-    };
+
     private void checkPermissions() {
         if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
-            TedPermission.with(this)
-                    .setPermissionListener(permissionlistener)
+            TedPermission.with(MainActivity.this)
+                    .setPermissionListener(permissionListener)
                     .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
                     .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
                     .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -136,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
         InitStatus = settings.getBoolean("InitStatus", true);
 
         context = this.getBaseContext();
-        checkPermissions();
 
         setOffsetOfView();
         Button btn_show_popup2;
