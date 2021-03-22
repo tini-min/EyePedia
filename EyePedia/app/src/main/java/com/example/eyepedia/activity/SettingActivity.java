@@ -28,9 +28,11 @@ import java.util.ArrayList;
 public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
     private ArrayList<ListItem> SettingDataList;
+
     private enum OnClickType {
         START_CALIBRATION, GAZE_VIEW_STATUS, TRANSLATE_STATUS, INIT_STATUS, DELETE_SETTING
     }
+
     private boolean GazeViewStatus, TranslateStatus, InitStatus;
     private boolean reset = false;
     public static Activity SetActivity;
@@ -42,7 +44,7 @@ public class SettingActivity extends AppCompatActivity {
 
         this.InitializeSettingData();
 
-        ListView listView = (ListView)findViewById(R.id.listView);
+        ListView listView = (ListView) findViewById(R.id.listView);
         final SettingAdapter myAdapter = new SettingAdapter(this, SettingDataList);
 
         listView.setAdapter(myAdapter);
@@ -125,6 +127,7 @@ public class SettingActivity extends AppCompatActivity {
         public String getItemName() {
             return this.itemName;
         }
+
         public OnClickType getOnClickType() {
             return this.onClickType;
         }
@@ -178,7 +181,7 @@ public class SettingActivity extends AppCompatActivity {
                         break;
                 }
 
-                switchView.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener(){
+                switchView.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         switch (onClickType) {
@@ -204,7 +207,7 @@ public class SettingActivity extends AppCompatActivity {
                 TextView textView = convertView.findViewById(R.id.itemText);
                 textView.setText(mData.get(position).getItemName());
 
-                textView.setOnClickListener(new View.OnClickListener(){
+                textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         OnClickType onClickType = mData.get(position).getOnClickType();
@@ -220,17 +223,6 @@ public class SettingActivity extends AppCompatActivity {
                                 finish();
                                 break;
                             case DELETE_SETTING:
-
-//                                Intent popupIntent = new Intent(getBaseContext(), PopupActivity.class);
-//                                intent.putExtra("type", PopupType.SELECT);
-//                                intent.putExtra("gravity", PopupGravity.LEFT);
-//                                intent.putExtra("title", "경고");
-//                                intent.putExtra("content", "모든 설정을 초기화하겠습니까?");
-//                                intent.putExtra("buttonLeft", "예");
-//                                intent.putExtra("buttonRight", "아니오");
-//                                startActivityForResult(popupIntent, 1);
-
-                                //if (reset) {
                                 PopupWindow InfoPopup;
                                 View popupView = getLayoutInflater().inflate(R.layout.activity_set_popup, null);
                                 InfoPopup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -244,15 +236,15 @@ public class SettingActivity extends AppCompatActivity {
                                 yes.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                            showToast("설정 초기화 완료", true);
-                                            intent.putExtra("GazeViewStatus", false);
-                                            intent.putExtra("TranslateStatus", true);
-                                            intent.putExtra("InitStatus", true);
-                                            intent.putExtra("Clicked", true);
-                                            InfoPopup.dismiss();
-                                            startActivity(intent);
-                                            finish();
-                                            Log.i(TAG + "onActivityResult", "Yes");
+                                        showToast("설정 초기화 완료", true);
+                                        intent.putExtra("GazeViewStatus", false);
+                                        intent.putExtra("TranslateStatus", true);
+                                        intent.putExtra("InitStatus", true);
+                                        intent.putExtra("Clicked", true);
+                                        InfoPopup.dismiss();
+                                        startActivity(intent);
+                                        finish();
+                                        Log.i(TAG + "onActivityResult", "Yes");
                                     }
                                 });
                                 Button no = (Button) popupView.findViewById(R.id.btn_no);
@@ -273,19 +265,7 @@ public class SettingActivity extends AppCompatActivity {
                     }
                 });
             }
-
             return convertView;
         }
     }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if (requestCode == 1){
-//            if (resultCode == RESULT_OK) {
-//                reset = data.getBooleanExtra("buttonLeft", true);
-//            } else showToast("설정 초기화 실패", true);
-//        }
-//    }
 }
