@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -27,6 +28,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 
+import com.example.eyepedia.ActivityResultEvent;
+import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
@@ -36,6 +39,12 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import camp.visual.gazetracker.GazeTracker;
@@ -130,6 +139,9 @@ public class MainActivity extends AppCompatActivity {
         OnActivated = settings.getBoolean("OnActivated", false);
         FirstActivated = settings.getBoolean("FirstActivated", true);
 
+        context = this.getBaseContext();
+        checkPermissions();
+
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
     }
@@ -165,15 +177,40 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
         if (requestCode == 0){
             if (resultCode == RESULT_OK) {
                 GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
                 TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
                 InitStatus = data.getBooleanExtra("InitStatus", true);
-                }
-            } else showToast("설정 저장 실패", true);
+                } else showToast("설정 저장 실패", true);
+            } else {
+            TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
+            textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+        }
+
         Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
+    }
+
+    public String ReadTextFile(String path){
+        StringBuffer strBuffer = new StringBuffer();
+        try{
+            InputStream is = new FileInputStream(path);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line="";
+            while((line=reader.readLine())!=null) {
+                strBuffer.append(line + "\n");
+            }
+            reader.close();
+            is.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "FileError";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error";
+        }
+        return strBuffer.toString();
     }
 
     @Override
@@ -335,8 +372,8 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
-    private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
+    private CoordinatorLayout backgroundLayout;
     private PointView viewPoint;
     private TextView translatedText;
     private CalibrationViewer viewCalibration;
