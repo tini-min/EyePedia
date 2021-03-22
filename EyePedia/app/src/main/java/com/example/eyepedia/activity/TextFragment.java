@@ -112,9 +112,109 @@ public class TextFragment extends Fragment  {
     private TextView resultText;
     private String result;
 
-    class BackgroundTask extends AsyncTask<Integer, Integer, Integer> {
-        protected void onPreExecute() {
+    public TextFragment() {
+        // Required empty public constructor
+    }
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        EventBus.getInstance().register(this);
+    }
+    @Override
+    public void onDestroyView() {
+        EventBus.getInstance().unregister(this);
+        super.onDestroyView();
+    }
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onActivityResultEvent(@NonNull ActivityResultEvent event) {
+        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case Constants.RequestCode.REQUEST_CODE_NAME_INPUT: {
+                Log.i("show me the Log", String.valueOf(requestCode));
+                if (resultCode == Activity.RESULT_OK) {
+                    String text = data.getStringExtra(KeySets.KEY_NAME_INPUT);
+                    if (!TextUtils.isEmpty(text)) {
+                        textView.setText(text);
+                    }
+                }
+                break;
+            }
         }
+    }
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_text, container, false);
+
+//        translationText = (EditText) view.findViewById(R.id.translationText);
+//        translationButton = (Button) view.findViewById(R.id.translationButton);
+//        resultText = (TextView) view.findViewById(R.id.resultText);
+
+        translationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new BackgroundTask().execute();
+            }
+        });
+        textView = (TextView) view.findViewById(R.id.textView);
+        view.findViewById(R.id.button_input).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getActivity(), "파일 불러옴", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+//                intent.putExtra("content", "해보자!");
+
+//                Intent intent = new Intent(getActivity().getApplicationContext(),SubActivity.class);
+                intent.setType("text/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.putExtra("Name", "BAD");
+                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
+            }
+        });
+        return view;
+    }
+
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        Spannable spannable = (Spannable) textView.getText();
+        String content = textView.getText().toString();
+        String[] strArray = content.split("\\.");
+        List<Integer> indArray = new ArrayList<Integer>();
+        for (String str : strArray) {
+            indArray.add(content.indexOf(str));
+        }
+        indArray.add(content.length());
+
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        for (int i = 0; i < indArray.size() - 1; i++) {
+            int finalI = i;
+            spannable.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    // ((MainActivity)getActivity()).setText(content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
+                    // Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
+                }
+            }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+    class BackgroundTask extends AsyncTask<Integer, Integer, Integer> {
+        protected void onPreExecute() { }
 
         @Override
         protected Integer doInBackground(Integer... arg0) {
@@ -161,7 +261,6 @@ public class TextFragment extends Fragment  {
             result = output.toString();
             return null;
         }
-
         protected void onPostExecute(Integer a) {
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(result);
@@ -174,168 +273,6 @@ public class TextFragment extends Fragment  {
                         .getAsJsonObject().get("translatedText").getAsString());
             }
 
-        }
-
-    }
-
-
-import butterknife.BindView;
-import butterknife.OnClick;
-
-public class TextFragment extends Fragment {
-    @Nullable
-    private static final String TAG = TextFragment.class.getSimpleName();
-    private static final int OPEN_DIRECTORY_REQUEST_CODE = 10;
-    TextView textView;
-
-
-    public TextFragment() {
-        // Required empty public constructor
-    }
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        EventBus.getInstance().register(this);
-    }
-    @Override
-    public void onDestroyView() {
-        EventBus.getInstance().unregister(this);
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        View view = inflater.inflate(R.layout.fragment_text, container, false);
-
-        translationText = (EditText) view.findViewById(R.id.translationText);
-        translationButton = (Button) view.findViewById(R.id.translationButton);
-        resultText = (TextView) view.findViewById(R.id.resultText);
-
-        translationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BackgroundTask().execute();
-            }
-        });
-
-        view.findViewById(R.id.explicit_button).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity(), "명시적 인텐트", Toast.LENGTH_SHORT).show();
-//                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//                intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                intent.putExtra("content", "해보자!");
-//                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-
-                Intent intent = new Intent(getActivity().getApplicationContext(),SubActivity.class);
-                intent.setType("text/*");
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra("Name","BAD");
-                startActivity(intent);
-//                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-            }
-        });
-        view.findViewById(R.id.implicit_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity(), "암시적 인텐트", Toast.LENGTH_SHORT).show();
-
-                //암시적 인텐트 목적에 맞는 호출 : 지도보기, 연락처보기, 인터넷, SNS 공유 등등.
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/"));
-                startActivity(intent);
-            }
-        });
-//        view.findViewById(R.id.button_to_translation).setOnClickListener(new View.OnClickListener() {
-//        @Override
-//        public void onClick(View view) {
-//            new Thread(){
-//                @Override
-//                public void run() {
-//                    String word = target_translation_word.getText().toString();
-//                    Menu_papago papago = new Menu_papago();
-//                    String resultWord;
-//                    resultWord= papago.getTranslation(word,"en","ko");
-//
-//                    Bundle papagoBundle = new Bundle();
-//                    papagoBundle.putString("resultWord",resultWord);
-//
-//                    Message msg = papago_handler.obtainMessage();
-//                    msg.setData(papagoBundle);
-//                    papago_handler.sendMessage(msg);
-//                }
-//            }.start();
-        textView = (TextView) view.findViewById(R.id.textView);
-
-        view.findViewById(R.id.button_input).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity(), "파일 불러옴", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                intent.putExtra("content", "해보자!");
-
-//                Intent intent = new Intent(getActivity().getApplicationContext(),SubActivity.class);
-                intent.setType("text/*");
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra("Name", "BAD");
-                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
-            }
-        });
-        return view;
-    }
-    @SuppressWarnings("unused")
-    @Subscribe
-    public void onActivityResultEvent(@NonNull ActivityResultEvent event) {
-        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case Constants.RequestCode.REQUEST_CODE_NAME_INPUT: {
-                Log.i("show me the Log", String.valueOf(requestCode));
-                if (resultCode == Activity.RESULT_OK) {
-                    String text = data.getStringExtra(KeySets.KEY_NAME_INPUT);
-                    if (!TextUtils.isEmpty(text)) {
-                        textView.setText(text);
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        Spannable spannable = (Spannable) textView.getText();
-        String content = textView.getText().toString();
-        String[] strArray = content.split("\\.");
-        List<Integer> indArray = new ArrayList<Integer>();
-        for (String str : strArray) {
-            indArray.add(content.indexOf(str));
-        }
-        indArray.add(content.length());
-
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
-        for (int i = 0; i < indArray.size() - 1; i++) {
-            int finalI = i;
-            spannable.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(View widget) {
-                    // ((MainActivity)getActivity()).setText(content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-                    // Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-                }
-            }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
 }
