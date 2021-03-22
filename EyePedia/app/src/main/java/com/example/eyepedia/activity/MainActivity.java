@@ -13,11 +13,14 @@ import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,10 +35,7 @@ import com.example.eyepedia.ActivityResultEvent;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
-import com.example.eyepedia.lakuepopupactivity.PopupActivity;
-import com.example.eyepedia.lakuepopupactivity.PopupGravity;
 import com.example.eyepedia.lakuepopupactivity.PopupResult;
-import com.example.eyepedia.lakuepopupactivity.PopupType;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
@@ -114,19 +114,35 @@ public class MainActivity extends AppCompatActivity {
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
 
-        // 팝업 버튼 정의의
+        // 팝업 버튼 정의
         btn_show_popup2 = findViewById(R.id.btn_show_popup2);
         btn_show_popup2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
-                intent.putExtra("type", PopupType.SELECT);
-                intent.putExtra("gravity", PopupGravity.LEFT);
-                intent.putExtra("title", "공지사항");
-                intent.putExtra("content", "Did Lakue make a Popup Activity?");
-                intent.putExtra("buttonLeft", "예");
-                intent.putExtra("buttonRight", "아니오");
-                startActivityForResult(intent, 2);
+//                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+//                intent.putExtra("type", PopupType.NORMAL);
+//                intent.putExtra("gravity", PopupGravity.CENTER);
+//                intent.putExtra("title", "알림");
+//                intent.putExtra("content", "빨간 점을 바라봐주세요!\n인식 정확도를 높여주는 기능입니다!!");
+//                intent.putExtra("buttonCenter", "종료");
+//                startActivityForResult(intent, 1);
+                PopupWindow InfoPopup;
+                View popupView = getLayoutInflater().inflate(R.layout.activity_popup, null);
+                InfoPopup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                //popupView 에서 (LinearLayout 을 사용) 레이아웃이 둘러싸고 있는 컨텐츠의 크기 만큼 팝업 크기를 지정
+
+                InfoPopup.setFocusable(true);
+                // 외부 영역 선택히 PopUp 종료
+                InfoPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+
+                Button cancel = (Button) popupView.findViewById(R.id.btn_ok);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        InfoPopup.dismiss();
+                    }
+                });
             }
         });
     }
@@ -174,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 1 :
                     if(result == PopupResult.CENTER){
-                        showToast("CENTER", true);
+                        //showToast("CENTER", true);
                     }
                     break;
                 case 2 :
