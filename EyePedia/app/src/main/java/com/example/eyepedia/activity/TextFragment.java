@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,10 +39,8 @@ public class TextFragment extends Fragment  {
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
 
-    private static final int PICK_PDF_FILE = 2;
     private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
-
-    private String result;
+    Button btn_show_popup2;
 
     public TextFragment() {
         // Required empty public constructor
@@ -104,7 +103,9 @@ public class TextFragment extends Fragment  {
         });
 
         return view;
+
     }
+
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);

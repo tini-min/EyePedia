@@ -17,11 +17,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -32,6 +32,10 @@ import com.example.eyepedia.ActivityResultEvent;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
+import com.example.eyepedia.lakuepopupactivity.PopupActivity;
+import com.example.eyepedia.lakuepopupactivity.PopupGravity;
+import com.example.eyepedia.lakuepopupactivity.PopupResult;
+import com.example.eyepedia.lakuepopupactivity.PopupType;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
@@ -63,8 +67,6 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-// mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
-
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
@@ -81,43 +83,14 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
-    Context context;
-
-    PermissionListener permissionlistener = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() {
-            initView(); // 권한이 승인되었을 때 실행할 함수
-        }
-
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-            Toast.makeText(MainActivity.this, "권한 허용을 하지 않으면 서비스를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show();
-        }
-    };
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
-            TedPermission.with(this)
-                    .setPermissionListener(permissionlistener)
-                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
-                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
-                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.READ_CONTACTS
-                    })
-                    .check();
-
-        } else { initView();}
-    }
-
-
-    //private GazeTracker gazeTracker;
+    // popup
+    private Button btn_show_popup2;
 
     // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
+    // 앱이 켜짐으로써 시작되는 함수
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
         //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
@@ -130,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
-        context = this.getBaseContext(); //heo
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
@@ -139,11 +111,26 @@ public class MainActivity extends AppCompatActivity {
         OnActivated = settings.getBoolean("OnActivated", false);
         FirstActivated = settings.getBoolean("FirstActivated", true);
 
-        context = this.getBaseContext();
-        checkPermissions();
+        context = this.getBaseContext(); //heo
 
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
+
+        // 팝업 버튼 정의의
+        btn_show_popup2 = findViewById(R.id.btn_show_popup2);
+        btn_show_popup2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+                intent.putExtra("type", PopupType.SELECT);
+                intent.putExtra("gravity", PopupGravity.LEFT);
+                intent.putExtra("title", "공지사항");
+                intent.putExtra("content", "Did Lakue make a Popup Activity?");
+                intent.putExtra("buttonLeft", "예");
+                intent.putExtra("buttonRight", "아니오");
+                startActivityForResult(intent, 2);
+            }
+        });
     }
 
     @Override
@@ -174,22 +161,95 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+//        if (requestCode == 0){
+//            if (resultCode == RESULT_OK) {
+//                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+//                InitStatus = data.getBooleanExtra("InitStatus", true);
+//            } else showToast("설정 저장 실패", true);
+//        }
+//    }
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-        if (requestCode == 0){
-            if (resultCode == RESULT_OK) {
-                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
-                TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
-                InitStatus = data.getBooleanExtra("InitStatus", true);
-                } else showToast("설정 저장 실패", true);
-            } else {
-            TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
-            textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+
+        if (resultCode == RESULT_OK) {
+            PopupResult result = (PopupResult) data.getSerializableExtra("result");
+            switch (requestCode) {
+                case 0 :
+                    GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+                    TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
+                    InitStatus = data.getBooleanExtra("InitStatus", true);
+                    break;
+                case 1 :
+                    if(result == PopupResult.CENTER){
+                        showToast("CENTER", true);
+                    }
+                    break;
+                case 2 :
+                    if(result == PopupResult.LEFT){
+                        showToast("LEFT", true);
+                    }
+                    else if(result == PopupResult.RIGHT){
+                        showToast("RIGHT", true);
+                    }
+                    break;
+                case 3 :
+                    if(result == PopupResult.CENTER){
+                        showToast("CENTER", true);
+                    }
+                    break;
+                case 4 :
+                    if(result == PopupResult.LEFT){
+                        showToast("LEFT", true);
+
+                    } else if(result == PopupResult.RIGHT){
+                        showToast("RIGHT", true);
+
+                    } else if(result == PopupResult.IMAGE){
+                        showToast("IMAGE", true);
+                    }
+                    break;
+                default :
+                    TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
+                    textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+                    break;
+            }
+        }
+        Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
+    }
+
+    // 저장 권한
+    Context context;
+    PermissionListener permissionlistener = new PermissionListener() {
+        @Override
+        public void onPermissionGranted() {
+            Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
         }
 
-        Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
+        @Override
+        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+            Toast.makeText(MainActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+        }
+    };
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
+            TedPermission.with(this)
+                    .setPermissionListener(permissionlistener)
+                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
+                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_CONTACTS
+                    })
+                    .check();
+
+        } else { initView();}
     }
 
     public String ReadTextFile(String path){
