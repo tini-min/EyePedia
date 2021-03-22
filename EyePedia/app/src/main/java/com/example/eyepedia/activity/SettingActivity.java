@@ -57,7 +57,6 @@ public class SettingActivity extends AppCompatActivity {
         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
         TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
-        //Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
