@@ -37,6 +37,8 @@ public class SettingActivity extends AppCompatActivity {
     private boolean reset = false;
     public static Activity SetActivity;
 
+    public static MainActivity.RequestCode RequestCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -222,41 +224,14 @@ public class SettingActivity extends AppCompatActivity {
                                 finish();
                                 break;
                             case DELETE_SETTING:
-                                PopupWindow InfoPopup;
-                                View popupView = getLayoutInflater().inflate(R.layout.activity_set_popup, null);
-                                InfoPopup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                                //popupView 에서 (LinearLayout 을 사용) 레이아웃이 둘러싸고 있는 컨텐츠의 크기 만큼 팝업 크기를 지정
-
-                                InfoPopup.setFocusable(true);
-                                // 외부 영역 선택히 PopUp 종료
-                                InfoPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-
-                                Button yes = (Button) popupView.findViewById(R.id.btn_yes);
-                                yes.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        showToast("설정 초기화 완료", true);
-                                        intent.putExtra("GazeViewStatus", false);
-                                        intent.putExtra("TranslateStatus", true);
-                                        intent.putExtra("InitStatus", true);
-                                        intent.putExtra("Clicked", true);
-                                        InfoPopup.dismiss();
-                                        startActivity(intent);
-                                        finish();
-                                        Log.i(TAG + "onActivityResult", "Yes");
-                                    }
-                                });
-                                Button no = (Button) popupView.findViewById(R.id.btn_no);
-                                no.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        InfoPopup.dismiss();
-                                        startActivity(intent);
-                                        finish();
-                                    }
-                                });
+                                showToast("설정 초기화 완료", true);
+                                intent.putExtra("GazeViewStatus", false);
+                                intent.putExtra("TranslateStatus", true);
+                                intent.putExtra("InitStatus", true);
+                                intent.putExtra("Clicked", true);
                                 Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
-
+                                startActivity(intent);
+                                finish();
                                 break;
                             default:
                                 break;

@@ -30,7 +30,7 @@ public class TextFragment extends Fragment  {
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
 
-    private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
+    public static MainActivity.RequestCode RequestCode;
 
     public TextFragment() {
         // Required empty public constructor
@@ -65,7 +65,7 @@ public class TextFragment extends Fragment  {
                 intent.setType("text/*");
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.putExtra("Name", "BAD");
-                startActivityForResult(intent, OPEN_DIRECTORY_REQUEST_CODE);
+                startActivityForResult(intent, RequestCode.Load_txtFile);
             }
         });
 
@@ -76,47 +76,7 @@ public class TextFragment extends Fragment  {
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Spannable spannable = (Spannable) textView.getText();
-        String content = textView.getText().toString();
-        String[] strArray = content.split("\\.|\\?");
-        List<Integer> indArray = new ArrayList<Integer>();
-        for (String str : strArray) {
-            if (indArray.isEmpty()) {
-                indArray.add(content.indexOf(str));
-            } else indArray.add(content.indexOf(str, indArray.get(indArray.size()-1)));
-        }
-        indArray.add(content.length());
-
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
-        for (int i = 0; i < indArray.size() - 1; i++) {
-            int finalI = i;
-            Log.i(TAG, String.valueOf(content.length()) + " / " + indArray.get(finalI) + " / " + indArray.get(finalI+1));
-            Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-            spannable.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(View widget) {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            if (((MainActivity)getActivity()).TranslateStatus) {
-                                String word = content.substring(indArray.get(finalI), indArray.get(finalI + 1));
-                                Menu_papago papago = new Menu_papago();
-                                String resultWord;
-                                resultWord = papago.getTranslation(word, "en", "ko");
-
-                                Bundle papagoBundle = new Bundle();
-                                papagoBundle.putString("resultWord", resultWord);
-
-                                Message msg = papago_handler.obtainMessage();
-                                msg.setData(papagoBundle);
-                                papago_handler.sendMessage(msg);
-                            }
-                        }
-                    }.start();
-                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
-                }
-            }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
+        setTextView(textView.getText().toString());
     }
     @SuppressLint("HandlerLeak")
     Handler papago_handler = new Handler(){
@@ -124,7 +84,6 @@ public class TextFragment extends Fragment  {
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
             String resultWord = bundle.getString("resultWord");
-            //result_translation.setText(resultWord);
             ((MainActivity)getActivity()).setText(resultWord);
         }
     };
