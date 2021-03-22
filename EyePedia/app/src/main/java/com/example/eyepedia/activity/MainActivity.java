@@ -83,19 +83,16 @@ public class MainActivity extends AppCompatActivity {
     private Handler backgroundHandler;
 
 
-
     Context context;
-
     PermissionListener permissionlistener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
-            Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
-            initView(); // 권한이 승인되었을 때 실행할 함수
+            Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-            Toast.makeText(MainActivity.this, "권한 허용을 하지 않으면 서비스를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
         }
     };
     private void checkPermissions() {

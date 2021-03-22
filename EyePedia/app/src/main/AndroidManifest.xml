@@ -35,13 +35,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activity.SettingActivity"
-            android:label="Settings"/>
+            android:label="@string/action_settings" />
         <activity
             android:name=".activity.SubActivity"
-            android:label="SubActivity"
             />
     </application>
 </manifest>
