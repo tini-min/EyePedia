@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Spannable;
 import android.text.Spanned;
-import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
@@ -16,32 +15,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.eyepedia.ActivityResultEvent;
-import com.example.eyepedia.Constants;
 import com.example.eyepedia.EventBus;
-import com.example.eyepedia.KeySets;
 import com.example.eyepedia.Menu_papago;
 import com.example.eyepedia.R;
-import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.app.Activity.RESULT_OK;
 
 public class TextFragment extends Fragment  {
     @Nullable
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
 
-    private static final int PICK_PDF_FILE = 2;
     private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
-
-    private String result;
 
     public TextFragment() {
         // Required empty public constructor
@@ -56,29 +45,6 @@ public class TextFragment extends Fragment  {
         EventBus.getInstance().unregister(this);
         super.onDestroyView();
     }
-    @SuppressWarnings("unused")
-    @Subscribe
-    public void onActivityResultEvent(@NonNull ActivityResultEvent event) {
-        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case Constants.RequestCode.REQUEST_CODE_NAME_INPUT: {
-                Log.i("show me the Log", String.valueOf(requestCode));
-                if (resultCode == RESULT_OK) {
-                    String text = data.getStringExtra(KeySets.KEY_NAME_INPUT);
-                    if (!TextUtils.isEmpty(text)) {
-                        textView.setText(text);
-                    }
-                }
-                break;
-            }
-        }
-    }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,7 +70,9 @@ public class TextFragment extends Fragment  {
         });
 
         return view;
+
     }
+
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
