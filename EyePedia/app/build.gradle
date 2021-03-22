@@ -39,25 +39,14 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-<<<<<<< HEAD
     implementation project(':libgaze-release')
     implementation project(':gazetracker-release')
 
     implementation 'gun0912.ted:tedpermission:2.0.0'
-=======
-}
-dependencies {
-    implementation project(':libgaze-release')
-    implementation project(':gazetracker-release')
-    implementation 'gun0912.ted:tedpermission:2.1.0'
->>>>>>> 2bad54c9d7eeea86484206a070249dfbda210e5f
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.squareup:otto:+'
     implementation 'com.jakewharton:butterknife:10.2.3'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
-<<<<<<< HEAD
-}
-=======
     implementation 'com.github.lakue119:LakuePopupActivity:1.0.1'
 }
 allprojects {
@@ -65,4 +54,3 @@ allprojects {
         maven { url 'https://jitpack.io' }
     }
 }
->>>>>>> 2bad54c9d7eeea86484206a070249dfbda210e5f

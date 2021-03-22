@@ -18,13 +18,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -70,9 +67,6 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
-
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
@@ -90,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler backgroundHandler;
 
     // popup
-    Button btn_show_popup2;
+    private Button btn_show_popup2;
 
     // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
     // 앱이 켜짐으로써 시작되는 함수
@@ -109,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
-        context = this.getBaseContext(); //heo
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
@@ -118,15 +111,14 @@ public class MainActivity extends AppCompatActivity {
         OnActivated = settings.getBoolean("OnActivated", false);
         FirstActivated = settings.getBoolean("FirstActivated", true);
 
-        context = this.getBaseContext();
+        context = this.getBaseContext(); //heo
 
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
-    }
 
         // 팝업 버튼 정의의
-       btn_show_popup2 = findViewById(R.id.btn_show_popup2);
-       btn_show_popup2.setOnClickListener(new View.OnClickListener() {
+        btn_show_popup2 = findViewById(R.id.btn_show_popup2);
+        btn_show_popup2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getBaseContext(), PopupActivity.class);
@@ -138,8 +130,9 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("buttonRight", "아니오");
                 startActivityForResult(intent, 2);
             }
-       });
+        });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -183,62 +176,50 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-        if (requestCode == 0){
-            if (resultCode == RESULT_OK) {
-                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
-                TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
-                InitStatus = data.getBooleanExtra("InitStatus", true);
-                } else showToast("설정 저장 실패", true);
-            } else {
-            TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
-            textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+
         if (resultCode == RESULT_OK) {
-            //데이터 받기
-            if(requestCode == 1){
-                PopupResult result = (PopupResult) data.getSerializableExtra("result");
-                if(result == PopupResult.CENTER){
-                    // 작성 코드
-                    Toast.makeText(this, "CENTER", Toast.LENGTH_SHORT).show();
-                }
-            }
-            if(requestCode == 2){
-                PopupResult result = (PopupResult) data.getSerializableExtra("result");
-                if(result == PopupResult.LEFT){
-                    // 작성 코드
-                    Toast.makeText(this, "LEFT", Toast.LENGTH_SHORT).show();
+            PopupResult result = (PopupResult) data.getSerializableExtra("result");
+            switch (requestCode) {
+                case 0 :
+                    GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+                    TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
+                    InitStatus = data.getBooleanExtra("InitStatus", true);
+                    break;
+                case 1 :
+                    if(result == PopupResult.CENTER){
+                        showToast("CENTER", true);
+                    }
+                    break;
+                case 2 :
+                    if(result == PopupResult.LEFT){
+                        showToast("LEFT", true);
+                    }
+                    else if(result == PopupResult.RIGHT){
+                        showToast("RIGHT", true);
+                    }
+                    break;
+                case 3 :
+                    if(result == PopupResult.CENTER){
+                        showToast("CENTER", true);
+                    }
+                    break;
+                case 4 :
+                    if(result == PopupResult.LEFT){
+                        showToast("LEFT", true);
 
-                } else if(result == PopupResult.RIGHT){
-                    // 작성 코드
-                    Toast.makeText(this, "RIGHT", Toast.LENGTH_SHORT).show();
+                    } else if(result == PopupResult.RIGHT){
+                        showToast("RIGHT", true);
 
-                }
-            }
-            if(requestCode == 3){
-                PopupResult result = (PopupResult) data.getSerializableExtra("result");
-                if(result == PopupResult.CENTER){
-                    // 작성 코드
-                    Toast.makeText(this, "CENTER", Toast.LENGTH_SHORT).show();
-
-                }
-            }
-            if(requestCode == 4){
-                PopupResult result = (PopupResult) data.getSerializableExtra("result");
-                if(result == PopupResult.LEFT){
-                    // 작성 코드
-                    Toast.makeText(this, "LEFT", Toast.LENGTH_SHORT).show();
-
-                } else if(result == PopupResult.RIGHT){
-                    // 작성 코드
-                    Toast.makeText(this, "RIGHT", Toast.LENGTH_SHORT).show();
-
-                } else if(result == PopupResult.IMAGE){
-                    // 작성 코드
-                    Toast.makeText(this, "IMAGE", Toast.LENGTH_SHORT).show();
-
-                }
+                    } else if(result == PopupResult.IMAGE){
+                        showToast("IMAGE", true);
+                    }
+                    break;
+                default :
+                    TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
+                    textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+                    break;
             }
         }
-
         Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
     }
 

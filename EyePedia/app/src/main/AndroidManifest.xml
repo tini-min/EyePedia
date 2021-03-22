@@ -32,19 +32,9 @@
 
         <activity
             android:name=".activity.SettingActivity"
-<<<<<<< HEAD
             android:label="Settings"/>
-        <activity
-            android:name=".activity.SubActivity"
-            android:label="SubActivity"
-            />
-=======
-            android:label="@string/action_settings" />
-        <activity android:name=".activity.SubActivity">
 
-        </activity>
         <activity android:name=".lakuepopupactivity.PopupActivity">
         </activity>
->>>>>>> 2bad54c9d7eeea86484206a070249dfbda210e5f
     </application>
 </manifest>
