@@ -3,18 +3,15 @@ package com.example.eyepedia.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +22,8 @@ import com.example.eyepedia.R;
 
 import java.util.ArrayList;
 
+import static com.example.eyepedia.activity.MainActivity.PREFS_NAME;
+
 public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
     private ArrayList<ListItem> SettingDataList;
@@ -34,10 +33,7 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private boolean GazeViewStatus, TranslateStatus, InitStatus;
-    private boolean reset = false;
     public static Activity SetActivity;
-
-    public static MainActivity.RequestCode RequestCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +42,7 @@ public class SettingActivity extends AppCompatActivity {
 
         this.InitializeSettingData();
 
-        ListView listView = (ListView) findViewById(R.id.listView);
+        ListView listView = (ListView)findViewById(R.id.listView);
         final SettingAdapter myAdapter = new SettingAdapter(this, SettingDataList);
 
         listView.setAdapter(myAdapter);
@@ -77,6 +73,18 @@ public class SettingActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
+        // 종료 시 설정 변수 저장
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("GazeViewStatus", GazeViewStatus);
+        editor.putBoolean("TranslateStatus", TranslateStatus);
+        editor.putBoolean("InitStatus", InitStatus);
+        editor.putBoolean("Clicked", false);
+        editor.putBoolean("OnActivated", false);
+        editor.putBoolean("FirstActivated", false);
+
+        editor.commit();
         Log.i(TAG, "onStop");
     }
 
@@ -96,15 +104,7 @@ public class SettingActivity extends AppCompatActivity {
         finish();
     }
 
-    private void showToast(final String msg, final boolean isShort) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(SettingActivity.this, msg, isShort ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
+    // 설정항목 설정
     public void InitializeSettingData() {
         SettingDataList = new ArrayList<ListItem>();
         SettingDataList.add(new ListItem("동체스캔 실행(정확도 향상)", OnClickType.START_CALIBRATION, false));
@@ -128,7 +128,6 @@ public class SettingActivity extends AppCompatActivity {
         public String getItemName() {
             return this.itemName;
         }
-
         public OnClickType getOnClickType() {
             return this.onClickType;
         }
@@ -182,7 +181,7 @@ public class SettingActivity extends AppCompatActivity {
                         break;
                 }
 
-                switchView.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
+                switchView.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener(){
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         switch (onClickType) {
@@ -208,7 +207,7 @@ public class SettingActivity extends AppCompatActivity {
                 TextView textView = convertView.findViewById(R.id.itemText);
                 textView.setText(mData.get(position).getItemName());
 
-                textView.setOnClickListener(new View.OnClickListener() {
+                textView.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View v) {
                         OnClickType onClickType = mData.get(position).getOnClickType();
@@ -260,7 +259,7 @@ public class SettingActivity extends AppCompatActivity {
                                 Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
 
                                 break;
-                            default:
+                            default :
                                 break;
                         }
                     }
@@ -268,5 +267,14 @@ public class SettingActivity extends AppCompatActivity {
             }
             return convertView;
         }
+    }
+
+    private void showToast(final String msg, final boolean isShort) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(SettingActivity.this, msg, isShort ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

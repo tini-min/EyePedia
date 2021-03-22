@@ -4,22 +4,18 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,14 +31,16 @@ import com.example.eyepedia.ActivityResultEvent;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
-import com.example.eyepedia.lakuepopupactivity.PopupResult;
+import com.example.eyepedia.popupactivity.PopupActivity;
+import com.example.eyepedia.popupactivity.PopupGravity;
+import com.example.eyepedia.popupactivity.PopupResult;
+import com.example.eyepedia.popupactivity.PopupType;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
 import com.google.android.material.appbar.AppBarLayout;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,12 +64,12 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
-public class MainActivity<constant> extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
-    private static boolean GazeViewStatus, InitStatus, OnActivated, FirstActivated;
+    private static boolean GazeViewStatus, InitStatus, OnActivated, BtnActivated;
     public static boolean TranslateStatus;
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
@@ -95,9 +93,6 @@ public class MainActivity<constant> extends AppCompatActivity {
         public static final int Load_txtFile = 5;
     }
 
-    // popup
-    private Button btn_show_popup2;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,39 +110,15 @@ public class MainActivity<constant> extends AppCompatActivity {
 
         // 저장된 설정 변수 읽어오기
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
+        GazeViewStatus = settings.getBoolean("GazeViewStatus", true); // 다시보기
         TranslateStatus = settings.getBoolean("TranslateStatus", true);
         InitStatus = settings.getBoolean("InitStatus", true);
         OnActivated = settings.getBoolean("OnActivated", false);
-        FirstActivated = settings.getBoolean("FirstActivated", true);
+        BtnActivated = settings.getBoolean("BtnActivated", false);
+        //FirstActivated = settings.getBoolean("FirstActivated", true);
 
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
-
-        // 팝업 버튼 정의
-        btn_show_popup2 = findViewById(R.id.btn_show_popup2);
-        btn_show_popup2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PopupWindow InfoPopup;
-                View popupView = getLayoutInflater().inflate(R.layout.activity_popup, null);
-                InfoPopup = new PopupWindow(popupView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                //popupView 에서 (LinearLayout 을 사용) 레이아웃이 둘러싸고 있는 컨텐츠의 크기 만큼 팝업 크기를 지정
-
-                InfoPopup.setFocusable(true);
-                // 외부 영역 선택히 PopUp 종료
-                InfoPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-
-
-                Button cancel = (Button) popupView.findViewById(R.id.btn_ok);
-                cancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        InfoPopup.dismiss();
-                    }
-                });
-            }
-        });
     }
 
     @Override
@@ -169,7 +140,7 @@ public class MainActivity<constant> extends AppCompatActivity {
             intent.putExtra("GazeViewStatus", GazeViewStatus);
             intent.putExtra("TranslateStatus", TranslateStatus);
             intent.putExtra("InitStatus", InitStatus);
-            startActivityForResult(intent, 0);
+            startActivityForResult(intent, RequestCode.Setting_Open);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -188,38 +159,32 @@ public class MainActivity<constant> extends AppCompatActivity {
                     InitStatus = data.getBooleanExtra("InitStatus", true);
                     break;
                 case RequestCode.Popup_Normal :
-                    if(result == PopupResult.CENTER) //showToast("CENTER", true);
-                        break;
-                case RequestCode.Popup_Select :
-                    if(result == PopupResult.LEFT) showToast("LEFT", true);
-                    else if(result == PopupResult.RIGHT) showToast("RIGHT", true);
+                    if(result == PopupResult.CENTER) {
+                        startTracking();
+                        startCalibration();
+                    }
                     break;
-                case RequestCode.Popup_Error :
-                    if(result == PopupResult.CENTER) showToast("CENTER", true);
-                    break;
-                case RequestCode.Popup_Image :
-                    if(result == PopupResult.LEFT) showToast("LEFT", true);
-                    else if(result == PopupResult.RIGHT) showToast("RIGHT", true);
-                    else if(result == PopupResult.IMAGE) showToast("IMAGE", true);
-                    break;
-                case RequestCode.Load_txtFile :
-                    TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
-                    textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
-                    Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18));
-                    Log.i(TAG, (ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18))));
-                    break;
+
                 default :
-                    Log.i(TAG, "ELSE");
-                    break;
+                    if (getIntent().getBooleanExtra("Clicked", false) && !BtnActivated){
+                        showToast( "OnClicked", true);
+                        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+                        TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
+                        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
+                        BtnActivated = !BtnActivated;
+                    } else {
+                        TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
+                        textFragment.setTextView(ReadTextFile(data.getData()));
+                        break;
+                    }
             }
         }
-        Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
     }
 
-    public String ReadTextFile(String path){
+    public String ReadTextFile(Uri uri){
         StringBuffer strBuffer = new StringBuffer();
         try{
-            InputStream is = new FileInputStream(path);
+            InputStream is = getContentResolver().openInputStream(uri);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line="";
             while((line=reader.readLine())!=null) {
@@ -242,20 +207,33 @@ public class MainActivity<constant> extends AppCompatActivity {
         super.onStart();
         initView();
         startTracking();
+        // 설정 번경시 변경된 변수 받기
         if (getIntent().getBooleanExtra("Clicked", false)){
             GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
             TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
             InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         }
-        Log.i(TAG + "onStart", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
+        translatedText.setText("번역할 문장을 주시해 주세요!");
         Log.i(TAG, "onStart");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (getIntent().getBooleanExtra("ActiveCalibration", false)) {
-            startCalibration();
+        if (getIntent().getBooleanExtra("ActiveCalibration", false) && !BtnActivated) {
+            BtnActivated = !BtnActivated;
+
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean("BtnActivated", BtnActivated);
+
+            Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+            intent.putExtra("type", PopupType.NORMAL);
+            intent.putExtra("gravity", PopupGravity.CENTER);
+            intent.putExtra("title", "알림");
+            intent.putExtra("content", "빨간 점을 바라봐주세요!\n인식 정확도를 높여주는 기능입니다!!");
+            intent.putExtra("buttonCenter", "닫기");
+            startActivityForResult(intent, RequestCode.Popup_Normal);
         }
         Log.i(TAG, "onResume");
     }
@@ -271,6 +249,18 @@ public class MainActivity<constant> extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         stopTracking();
+
+        // 종료 시 설정 변수 저장
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("GazeViewStatus", GazeViewStatus);
+        editor.putBoolean("TranslateStatus", TranslateStatus);
+        editor.putBoolean("InitStatus", InitStatus);
+        editor.putBoolean("OnActivated", false);
+        editor.putBoolean("FirstActivated", false);
+        editor.putBoolean("BtnActivated", false);
+
+        editor.commit();
 
         Log.i(TAG, "onStop");
     }
@@ -290,13 +280,12 @@ public class MainActivity<constant> extends AppCompatActivity {
             pressedTime = System.currentTimeMillis();
         }
         else {
-            int seconds = (int) (System.currentTimeMillis() - pressedTime);
+            int seconds = (int) (System.currentTimeMillis() - pressedTime); // 종료 시 설정 변수 저장
 
             if ( seconds > 2000 ) {
                 Toast.makeText(MainActivity.this, " 한 번 더 누르면 종료됩니다." , Toast.LENGTH_LONG).show();
                 pressedTime = System.currentTimeMillis();
-            }
-            else {
+            } else {
                 SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putBoolean("GazeViewStatus", GazeViewStatus);
@@ -304,11 +293,6 @@ public class MainActivity<constant> extends AppCompatActivity {
                 editor.putBoolean("InitStatus", InitStatus);
                 editor.putBoolean("OnActivated", false);
                 editor.putBoolean("FirstActivated", false);
-
-                String msg = "";
-                for (boolean i : new boolean[]{GazeViewStatus, TranslateStatus, InitStatus}) msg += i + " / ";
-
-                Log.i("SharedPreferences", msg);
 
                 editor.commit();
 
@@ -404,7 +388,7 @@ public class MainActivity<constant> extends AppCompatActivity {
     private AppBarLayout menuBar;
     private GazePathView gazePathView;
     private boolean isUseGazeFilter = true;
-    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
+    private CalibrationModeType calibrationType = CalibrationModeType.ONE_POINT;
 
     private void initView() {
         backgroundLayout = findViewById(R.id.layout_background);
@@ -512,7 +496,7 @@ public class MainActivity<constant> extends AppCompatActivity {
     }
 
     private void setViewAtGazeTrackerState() {
-//        Log.i(TAG, "gaze : " + isGazeNonNull() + ", tracking " + isTracking());
+//        Log.i(TAG, "gaze : " + isGazeNonNull() + ", tracking : " + isTracking());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -540,10 +524,6 @@ public class MainActivity<constant> extends AppCompatActivity {
         public void onInitialized(GazeTracker gazeTracker, InitializationErrorType error) {
             if (gazeTracker != null) {
                 initSuccess(gazeTracker);
-                if (InitStatus && !OnActivated) {
-                    //startCalibration();
-                    OnActivated = true;
-                }
             } else {
                 initFail(error);
             }
@@ -555,6 +535,20 @@ public class MainActivity<constant> extends AppCompatActivity {
         this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
+        if (InitStatus && !OnActivated) {
+            Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+            intent.putExtra("type", PopupType.NORMAL);
+            intent.putExtra("gravity", PopupGravity.CENTER);
+            intent.putExtra("title", "알림");
+            intent.putExtra("content", "빨간 점을 바라봐주세요!\n인식 정확도를 높여주는 기능입니다!!");
+            intent.putExtra("buttonCenter", "닫기");
+            startActivityForResult(intent, RequestCode.Popup_Normal);
+
+            OnActivated = true;
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean("OnActivated", OnActivated);
+        }
     }
 
     private void initFail(InitializationErrorType error) {
@@ -644,10 +638,9 @@ public class MainActivity<constant> extends AppCompatActivity {
                                             public void run() {
                                                 backgroundLayout.dispatchTouchEvent(MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, metaState));
                                                 backgroundLayout.dispatchTouchEvent(MotionEvent.obtain(downTime + 100, eventTime + 200, MotionEvent.ACTION_UP, x, y, metaState));
-                                                Log.i(TAG, "Touch 완료");
                                             }
                                         });
-                                        Log.i(TAG, "GazeTracker x: " + x + " GazeTracker y: " + y);
+                                        //Log.i(TAG, "GazeTracker x: " + x + " GazeTracker y: " + y);
                                     }
                                 }
                             }
