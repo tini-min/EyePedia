@@ -237,7 +237,7 @@ public class SettingActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(View v) {
                                         showToast("설정 초기화 완료", true);
-                                        intent.putExtra("GazeViewStatus", false);
+                                        intent.putExtra("GazeViewStatus", true);
                                         intent.putExtra("TranslateStatus", true);
                                         intent.putExtra("InitStatus", true);
                                         intent.putExtra("Clicked", true);
