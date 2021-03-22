@@ -10,8 +10,8 @@ import java.net.URLEncoder;
 public class Menu_papago {
     public String getTranslation(String word, String source, String target) {
 
-        String clientId = "lW72OjMsgLdaTMMxlzzh";//애플리케이션 클라이언트 아이디값";
-        String clientSecret = "0ejOfnbVHH";//애플리케이션 클라이언트 시크릿값";
+        String clientId = "osNBbOufOBpyYd6SqLNu";//애플리케이션 클라이언트 아이디값";
+        String clientSecret = "qSC9wITClL";//애플리케이션 클라이언트 시크릿값";
 
         try {
             String wordSource, wordTarget;

@@ -34,7 +34,7 @@
             android:name=".activity.SettingActivity"
             android:label="Settings"/>
 
-        <activity android:name=".lakuepopupactivity.PopupActivity">
+        <activity android:name=".popupactivity.PopupActivity" android:theme="@android:style/Theme.Dialog">
         </activity>
     </application>
 </manifest>

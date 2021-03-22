@@ -3,6 +3,7 @@ package com.example.eyepedia.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,21 +18,26 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.eyepedia.ActivityResultEvent;
+import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
+import com.example.eyepedia.popupactivity.PopupResult;
 
 import java.util.ArrayList;
+
+import static com.example.eyepedia.activity.MainActivity.PREFS_NAME;
 
 public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
     private ArrayList<ListItem> SettingDataList;
+
     private enum OnClickType {
         START_CALIBRATION, GAZE_VIEW_STATUS, TRANSLATE_STATUS, INIT_STATUS, DELETE_SETTING
     }
-    private boolean GazeViewStatus, TranslateStatus, InitStatus;
-    private boolean reset = false;
-    public static Activity SetActivity;
 
-    public static MainActivity.RequestCode RequestCode;
+    private boolean GazeViewStatus, TranslateStatus, InitStatus;
+    private boolean Reset = false;
+    public static Activity SetActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +51,26 @@ public class SettingActivity extends AppCompatActivity {
 
         listView.setAdapter(myAdapter);
         SetActivity = SettingActivity.this;
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+
+        if (resultCode == RESULT_OK) {
+            PopupResult result = (PopupResult) data.getSerializableExtra("result");
+            switch (requestCode) {
+                case MainActivity.RequestCode.Popup_Select:
+                    if (result == PopupResult.LEFT) {
+                        showToast("설정 초기화 완료", true);
+                        Reset = true;
+                    } else if (result == PopupResult.RIGHT) Reset = false;
+                    break;
+                default:
+                    Log.i(TAG, "ELSE");
+                    break;
+            }
+        }
     }
 
     @Override
@@ -71,6 +97,18 @@ public class SettingActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
+        // 종료 시 설정 변수 저장
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("GazeViewStatus", GazeViewStatus);
+        editor.putBoolean("TranslateStatus", TranslateStatus);
+        editor.putBoolean("InitStatus", InitStatus);
+        editor.putBoolean("Clicked", false);
+        editor.putBoolean("OnActivated", false);
+        editor.putBoolean("FirstActivated", false);
+
+        editor.commit();
         Log.i(TAG, "onStop");
     }
 
@@ -90,15 +128,7 @@ public class SettingActivity extends AppCompatActivity {
         finish();
     }
 
-    private void showToast(final String msg, final boolean isShort) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(SettingActivity.this, msg, isShort ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
+    // 설정항목 설정
     public void InitializeSettingData() {
         SettingDataList = new ArrayList<ListItem>();
         SettingDataList.add(new ListItem("동체스캔 실행(정확도 향상)", OnClickType.START_CALIBRATION, false));
@@ -217,23 +247,43 @@ public class SettingActivity extends AppCompatActivity {
                                 finish();
                                 break;
                             case DELETE_SETTING:
-                                showToast("설정 초기화 완료", true);
-                                intent.putExtra("GazeViewStatus", false);
-                                intent.putExtra("TranslateStatus", true);
-                                intent.putExtra("InitStatus", true);
-                                intent.putExtra("Clicked", true);
-                                Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
-                                startActivity(intent);
-                                finish();
+//                                Intent PopIntent = new Intent(getApplicationContext(), PopupActivity.class);
+//                                PopIntent.putExtra("type", PopupType.SELECT);
+//                                PopIntent.putExtra("gravity", PopupGravity.LEFT);
+//                                PopIntent.putExtra("title", "주의");
+//                                PopIntent.putExtra("content", "모든 설정이 초기화 됩니다.");
+//                                PopIntent.putExtra("buttonLeft", "예");
+//                                PopIntent.putExtra("buttonRight", "아니오");
+//                                startActivityForResult(intent, MainActivity.RequestCode.Popup_Select);
+//                                Log.i(TAG, "OUT");
+
+                                //if (Reset) {
+                                    showToast("설정 초기화 완료", true);
+                                    intent.putExtra("GazeViewStatus", false);
+                                    intent.putExtra("TranslateStatus", true);
+                                    intent.putExtra("InitStatus", true);
+                                    intent.putExtra("Clicked", true);
+
+                                    startActivity(intent);
+                                    finish();
+                                //}
                                 break;
-                            default:
+                            default :
                                 break;
                         }
                     }
                 });
             }
-
             return convertView;
         }
+    }
+
+    private void showToast(final String msg, final boolean isShort) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(SettingActivity.this, msg, isShort ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
