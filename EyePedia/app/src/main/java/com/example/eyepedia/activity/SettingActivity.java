@@ -25,9 +25,10 @@ public class SettingActivity extends AppCompatActivity {
     private static final String TAG = SettingActivity.class.getSimpleName();
     private ArrayList<ListItem> SettingDataList;
     private enum OnClickType {
-        START_CALIBRATION, GAZE_VIEW_STATUS, TRAKING_STATUS, INIT_STATUS, SAVE_SETTING, DELETE_SETTING
+        START_CALIBRATION, GAZE_VIEW_STATUS, TRANSLATE_STATUS, INIT_STATUS, DELETE_SETTING
     }
-    private boolean GazeViewStatus, TrackingStatus, InitStatus;
+    private boolean GazeViewStatus, TranslateStatus, InitStatus;
+    private boolean reset = false;
     public static Activity SetActivity;
 
     @Override
@@ -48,7 +49,7 @@ public class SettingActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
-        TrackingStatus = getIntent().getBooleanExtra("TrackingStatus", true);
+        TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         //Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
@@ -81,10 +82,8 @@ public class SettingActivity extends AppCompatActivity {
     public void onBackPressed() {
         Intent mIntent = new Intent();
         mIntent.putExtra("GazeViewStatus", GazeViewStatus);
-        mIntent.putExtra("TrackingStatus", TrackingStatus);
+        mIntent.putExtra("TranslateStatus", TranslateStatus);
         mIntent.putExtra("InitStatus", InitStatus);
-
-        //Log.i(TAG,String.valueOf(GazeViewStatus) + " / " + InitStatus);
 
         setResult(Activity.RESULT_OK, mIntent);
         finish();
@@ -101,12 +100,11 @@ public class SettingActivity extends AppCompatActivity {
 
     public void InitializeSettingData() {
         SettingDataList = new ArrayList<ListItem>();
-        SettingDataList.add(new ListItem("동체스캔(정확도 향상)", OnClickType.START_CALIBRATION, false));
+        SettingDataList.add(new ListItem("동체스캔 실행(정확도 향상)", OnClickType.START_CALIBRATION, false));
         SettingDataList.add(new ListItem("포인터 활성화", OnClickType.GAZE_VIEW_STATUS, true));
-        SettingDataList.add(new ListItem("아이트랙킹 활성화", OnClickType.TRAKING_STATUS, true));
+        SettingDataList.add(new ListItem("번역 활성화", OnClickType.TRANSLATE_STATUS, true));
         SettingDataList.add(new ListItem("시작 시 동체스캔 활성화", OnClickType.INIT_STATUS, true));
-        SettingDataList.add(new ListItem("설정 저장", OnClickType.SAVE_SETTING, false));
-        SettingDataList.add(new ListItem("설정 삭제", OnClickType.DELETE_SETTING, false));
+        SettingDataList.add(new ListItem("설정 초기화", OnClickType.DELETE_SETTING, false));
     }
 
     public class ListItem {
@@ -166,8 +164,8 @@ public class SettingActivity extends AppCompatActivity {
                     case GAZE_VIEW_STATUS:
                         switchView.setChecked(GazeViewStatus);
                         break;
-                    case TRAKING_STATUS:
-                        switchView.setChecked(TrackingStatus);
+                    case TRANSLATE_STATUS:
+                        switchView.setChecked(TranslateStatus);
                         break;
                     case INIT_STATUS:
                         switchView.setChecked(InitStatus);
@@ -184,9 +182,9 @@ public class SettingActivity extends AppCompatActivity {
                                 GazeViewStatus = !GazeViewStatus;
                                 showToast("포인터 활성화 " + ((GazeViewStatus) ? "설정" : "해제"), true);
                                 break;
-                            case TRAKING_STATUS:
-                                TrackingStatus = !TrackingStatus;
-                                showToast("아이트랙킹 활성화 " + ((TrackingStatus) ? "설정" : "해제"), true);
+                            case TRANSLATE_STATUS:
+                                TranslateStatus = !TranslateStatus;
+                                showToast("번역 활성화 " + ((TranslateStatus) ? "설정" : "해제"), true);
                                 break;
                             case INIT_STATUS:
                                 InitStatus = !InitStatus;
@@ -211,23 +209,32 @@ public class SettingActivity extends AppCompatActivity {
                             case START_CALIBRATION:
                                 intent.putExtra("ActiveCalibration", true);
                                 intent.putExtra("GazeViewStatus", GazeViewStatus);
+                                intent.putExtra("TranslateStatus", TranslateStatus);
                                 intent.putExtra("InitStatus", InitStatus);
-                                startActivity(intent);
-                                finish();
-                                break;
-                            case SAVE_SETTING:
-                                showToast("설정 저장 완료", true);
-                                intent.putExtra("GazeViewStatus", GazeViewStatus);
-                                intent.putExtra("InitStatus", InitStatus);
+                                intent.putExtra("Clicked", true);
                                 startActivity(intent);
                                 finish();
                                 break;
                             case DELETE_SETTING:
-                                showToast("설정 삭제 완료", true);
-                                intent.putExtra("GazeViewStatus", false);
-                                intent.putExtra("InitStatus", true);
+//                                Intent popupIntent = new Intent(getBaseContext(), PopupActivity.class);
+//                                intent.putExtra("type", PopupType.SELECT);
+//                                intent.putExtra("gravity", PopupGravity.LEFT);
+//                                intent.putExtra("title", "경고");
+//                                intent.putExtra("content", "모든 설정을 초기화하겠습니까?");
+//                                intent.putExtra("buttonLeft", "예");
+//                                intent.putExtra("buttonRight", "아니오");
+//                                startActivityForResult(popupIntent, 1);
+
+                                //if (reset) {
+                                    showToast("설정 초기화 완료", true);
+                                    intent.putExtra("GazeViewStatus", false);
+                                    intent.putExtra("TranslateStatus", true);
+                                    intent.putExtra("InitStatus", true);
+                                    intent.putExtra("Clicked", true);
+                                Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
                                 startActivity(intent);
                                 finish();
+                                //}
                                 break;
                             default:
                                 break;
@@ -239,4 +246,15 @@ public class SettingActivity extends AppCompatActivity {
             return convertView;
         }
     }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == 1){
+//            if (resultCode == RESULT_OK) {
+//                reset = data.getBooleanExtra("buttonLeft", true);
+//            } else showToast("설정 초기화 실패", true);
+//        }
+//    }
 }

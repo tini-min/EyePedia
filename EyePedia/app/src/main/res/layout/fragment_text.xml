@@ -10,31 +10,41 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:bufferType="spannable"
-            android:lineSpacingExtra="20dp"
-            android:padding="30dp"
-            android:text="A king with no subjects, who only issues orders that can be followed, such as commanding the sun to set at sunset. A narcissistic man who only wants the praise which comes from admiration and being the most-admirable person on his otherwise uninhabited planet."
-            android:textSize="20sp"
-            android:fontFamily="@font/font_basic"
-            android:textColor="@color/black"
-            android:textColorLink="@color/black"
-            app:layout_constraintBottom_toTopOf="@+id/button"
+            android:layout_marginBottom="24dp"
+            android:fillViewport="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/load_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintVertical_bias="1.0">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:bufferType="spannable"
+                android:lineSpacingExtra="20dp"
+                android:padding="30dp"
+
+                android:breakStrategy="high_quality"
+                android:hyphenationFrequency="full"
+                android:text="The three little pigs build new houses. The first little pig builds a house of straw. The second little pig builds a house of wood. The house is pretty. He likes it very much. The third little pig builds a house of bricks. He is happy. One day, a big bad wolf goes to the house of straw. He wants to eat the first little pig. The wolf huffs and puffs. He blows the house down. The first little pig runs to the house of wood. The wolf goes to the house of wood. He wants to eat the pigs. The wolf huffs and puffs. He blows the house down. The two little pigs run to the house of bricks. They knock on the door. The wolf goes to the house of bricks. He huffs and puffs. His face turns red. He huffs again. But the house is still. The wolf climbs up on the roof. The third little pig is making soup. The soup is hot. The wolf jumps down the chimney. Splash! He falls in the hot soup. The third little pig eats the soup. It is good."
+                android:textColorLink="@color/black"
+                android:textSize="25sp" />
+        </ScrollView>
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/load_button"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:onClick="mOnFileRead"
             android:text="파일읽기"
             android:fontFamily="@font/font_basic"
             android:textSize="20sp"

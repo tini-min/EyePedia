@@ -1,6 +1,7 @@
 package com.example.eyepedia.activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -32,6 +33,10 @@ import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
 import com.google.android.material.appbar.AppBarLayout;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+
+import java.util.ArrayList;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -49,13 +54,15 @@ import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
 
+// mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
-    private static boolean GazeViewStatus, InitStatus;
+    private static boolean GazeViewStatus, InitStatus, OnActivated, FirstActivated;
+    public static boolean TranslateStatus;
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
 
@@ -65,8 +72,39 @@ public class MainActivity extends AppCompatActivity {
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
 
+    Context context;
+
+    PermissionListener permissionlistener = new PermissionListener() {
+        @Override
+        public void onPermissionGranted() {
+            initView(); // 권한이 승인되었을 때 실행할 함수
+        }
+
+        @Override
+        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+            Toast.makeText(MainActivity.this, "권한 허용을 하지 않으면 서비스를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
+            TedPermission.with(this)
+                    .setPermissionListener(permissionlistener)
+                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
+                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_CONTACTS
+                    })
+                    .check();
+
+        } else { initView();}
+    }
+
+
     //private GazeTracker gazeTracker;
 
+    // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,19 +113,25 @@ public class MainActivity extends AppCompatActivity {
         //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
-        initView();
         checkPermission();
+        initView();
         initHandler();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_text, new TextFragment()).commit();
+        context = this.getBaseContext(); //heo
+
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         GazeViewStatus = settings.getBoolean("GazeViewStatus", false);
+        TranslateStatus = settings.getBoolean("TranslateStatus", true);
         InitStatus = settings.getBoolean("InitStatus", true);
+        OnActivated = settings.getBoolean("OnActivated", false);
+        FirstActivated = settings.getBoolean("FirstActivated", true);
 
         setOffsetOfView();
+        Log.i(TAG, "OnCreate");
     }
 
     @Override
@@ -105,14 +149,14 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        switch (id) {
-            case R.id.action_settings:
-                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-                intent.putExtra("GazeViewStatus", GazeViewStatus);
-                intent.putExtra("InitStatus", InitStatus);
-                startActivityForResult(intent, 0);
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+            intent.putExtra("GazeViewStatus", GazeViewStatus);
+            intent.putExtra("TranslateStatus", TranslateStatus);
+            intent.putExtra("InitStatus", InitStatus);
+            startActivityForResult(intent, 0);
 
-                Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
+            Log.i(TAG + "넘김", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
         }
 
         return super.onOptionsItemSelected(item);
@@ -125,19 +169,24 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 0){
             if (resultCode == RESULT_OK) {
                 GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+                TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
                 InitStatus = data.getBooleanExtra("InitStatus", true);
+                }
             } else showToast("설정 저장 실패", true);
-        }
+        Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
-        InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         initView();
         startTracking();
-        Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
+        if (getIntent().getBooleanExtra("Clicked", false)){
+            GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
+            TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
+            InitStatus = getIntent().getBooleanExtra("InitStatus", true);
+        }
+        Log.i(TAG + "onStart", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
@@ -161,12 +210,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         stopTracking();
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putBoolean("GazeViewStatus", GazeViewStatus);
-        editor.putBoolean("InitStatus", InitStatus);
 
-        editor.commit();
         Log.i(TAG, "onStop");
     }
 
@@ -192,6 +236,21 @@ public class MainActivity extends AppCompatActivity {
                 pressedTime = System.currentTimeMillis();
             }
             else {
+                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putBoolean("GazeViewStatus", GazeViewStatus);
+                editor.putBoolean("TranslateStatus", TranslateStatus);
+                editor.putBoolean("InitStatus", InitStatus);
+                editor.putBoolean("OnActivated", false);
+                editor.putBoolean("FirstActivated", false);
+
+                String msg = "";
+                for (boolean i : new boolean[]{GazeViewStatus, TranslateStatus, InitStatus}) msg += i + " / ";
+
+                Log.i("SharedPreferences", msg);
+
+                editor.commit();
+
                 moveTaskToBack(true);
                 finishAndRemoveTask();
                 android.os.Process.killProcess(android.os.Process.myPid());
@@ -299,6 +358,7 @@ public class MainActivity extends AppCompatActivity {
         translatedText = findViewById(R.id.translated_text);
 
         gazePathView.setVisibility((GazeViewStatus)? View.VISIBLE : View.INVISIBLE);
+
         setOffsetOfView();
     }
 
@@ -419,6 +479,10 @@ public class MainActivity extends AppCompatActivity {
         public void onInitialized(GazeTracker gazeTracker, InitializationErrorType error) {
             if (gazeTracker != null) {
                 initSuccess(gazeTracker);
+                if (InitStatus && !OnActivated) {
+                    //startCalibration();
+                    OnActivated = true;
+                }
             } else {
                 initFail(error);
             }
@@ -430,7 +494,6 @@ public class MainActivity extends AppCompatActivity {
         this.gazeTracker.setCallbacks(gazeCallback, calibrationCallback, statusCallback);
         startTracking();
         hideProgress();
-        if (InitStatus) startCalibration();
     }
 
     private void initFail(InitializationErrorType error) {
@@ -604,8 +667,6 @@ public class MainActivity extends AppCompatActivity {
 
         String licenseKey = "dev_6223o6dqrnnywdbl55htd5mr26jv9fi08qskthlp";
         GazeTracker.initGazeTracker(getApplicationContext(), gazeDevice, licenseKey, initializationCallback);
-
-//        if (InitStatus) startCalibration();
     }
 
     private void releaseGaze() {
