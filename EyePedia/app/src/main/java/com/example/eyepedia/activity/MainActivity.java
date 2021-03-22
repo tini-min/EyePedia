@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
 
-    //private GazeTrackerManager gazeTrackerManager;
     private GazeTracker gazeTracker;
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
@@ -92,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
         checkPermission();
@@ -161,17 +159,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-//        if (requestCode == 0){
-//            if (resultCode == RESULT_OK) {
-//                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
-//                InitStatus = data.getBooleanExtra("InitStatus", true);
-//            } else showToast("설정 저장 실패", true);
-//        }
-//    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -217,6 +204,8 @@ public class MainActivity extends AppCompatActivity {
                 default :
                     TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
                     textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+                    Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18));
+                    Log.i(TAG, (ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18))));
                     break;
             }
         }
@@ -577,7 +566,7 @@ public class MainActivity extends AppCompatActivity {
             if (gazeTracker != null) {
                 initSuccess(gazeTracker);
                 if (InitStatus && !OnActivated) {
-                    startCalibration();
+                    //startCalibration();
                     OnActivated = true;
                 }
             } else {
