@@ -18,10 +18,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.eyepedia.ActivityResultEvent;
-import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
-import com.example.eyepedia.popupactivity.PopupResult;
 
 import java.util.ArrayList;
 
@@ -36,7 +33,6 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private boolean GazeViewStatus, TranslateStatus, InitStatus;
-    private boolean Reset = false;
     public static Activity SetActivity;
 
     @Override
@@ -51,26 +47,6 @@ public class SettingActivity extends AppCompatActivity {
 
         listView.setAdapter(myAdapter);
         SetActivity = SettingActivity.this;
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-
-        if (resultCode == RESULT_OK) {
-            PopupResult result = (PopupResult) data.getSerializableExtra("result");
-            switch (requestCode) {
-                case MainActivity.RequestCode.Popup_Select:
-                    if (result == PopupResult.LEFT) {
-                        showToast("설정 초기화 완료", true);
-                        Reset = true;
-                    } else if (result == PopupResult.RIGHT) Reset = false;
-                    break;
-                default:
-                    Log.i(TAG, "ELSE");
-                    break;
-            }
-        }
     }
 
     @Override
@@ -247,26 +223,14 @@ public class SettingActivity extends AppCompatActivity {
                                 finish();
                                 break;
                             case DELETE_SETTING:
-//                                Intent PopIntent = new Intent(getApplicationContext(), PopupActivity.class);
-//                                PopIntent.putExtra("type", PopupType.SELECT);
-//                                PopIntent.putExtra("gravity", PopupGravity.LEFT);
-//                                PopIntent.putExtra("title", "주의");
-//                                PopIntent.putExtra("content", "모든 설정이 초기화 됩니다.");
-//                                PopIntent.putExtra("buttonLeft", "예");
-//                                PopIntent.putExtra("buttonRight", "아니오");
-//                                startActivityForResult(intent, MainActivity.RequestCode.Popup_Select);
-//                                Log.i(TAG, "OUT");
+                                showToast("설정 초기화 완료", true);
+                                intent.putExtra("GazeViewStatus", false);
+                                intent.putExtra("TranslateStatus", true);
+                                intent.putExtra("InitStatus", true);
+                                intent.putExtra("Clicked", true);
 
-                                //if (Reset) {
-                                    showToast("설정 초기화 완료", true);
-                                    intent.putExtra("GazeViewStatus", false);
-                                    intent.putExtra("TranslateStatus", true);
-                                    intent.putExtra("InitStatus", true);
-                                    intent.putExtra("Clicked", true);
-
-                                    startActivity(intent);
-                                    finish();
-                                //}
+                                startActivity(intent);
+                                finish();
                                 break;
                             default :
                                 break;
