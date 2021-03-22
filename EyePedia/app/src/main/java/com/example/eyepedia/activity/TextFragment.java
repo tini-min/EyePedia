@@ -102,13 +102,10 @@ public class TextFragment extends Fragment  {
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
 
-    private static final int PICK_PDF_FILE = 2;
     private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
-    boolean uriToLoad;
-
 
     private EditText translationText;
-    private Button translationButton;
+//    private Button translationButton;
     private TextView resultText;
     private String result;
 
@@ -160,16 +157,8 @@ public class TextFragment extends Fragment  {
 
         View view = inflater.inflate(R.layout.fragment_text, container, false);
 
-//        translationText = (EditText) view.findViewById(R.id.translationText);
-//        translationButton = (Button) view.findViewById(R.id.translationButton);
-//        resultText = (TextView) view.findViewById(R.id.resultText);
 
-        translationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BackgroundTask().execute();
-            }
-        });
+
         textView = (TextView) view.findViewById(R.id.textView);
         view.findViewById(R.id.button_input).setOnClickListener(new View.OnClickListener() {
             @Override

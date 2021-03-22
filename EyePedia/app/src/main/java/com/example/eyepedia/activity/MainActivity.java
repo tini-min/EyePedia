@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
-    private ImageView imageView;
 
 
 
@@ -168,22 +167,22 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-        if (requestCode == 0){
-            if (resultCode == RESULT_OK) {
-                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
-                InitStatus = data.getBooleanExtra("InitStatus", true);
-            } else showToast("설정 저장 실패", true);
-        }
-    }
 //    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 //        super.onActivityResult(requestCode, resultCode, data);
 //        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+//        if (requestCode == 0){
+//            if (resultCode == RESULT_OK) {
+//                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+//                InitStatus = data.getBooleanExtra("InitStatus", true);
+//            } else showToast("설정 저장 실패", true);
+//        }
 //    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+    }
 
 
     @Override
