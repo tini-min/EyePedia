@@ -16,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +29,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 
+import com.example.eyepedia.ActivityResultEvent;
+import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
 import com.example.eyepedia.view.CalibrationViewer;
@@ -37,6 +41,7 @@ import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import java.util.ArrayList;
+import com.google.android.material.appbar.AppBarLayout;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -53,6 +58,9 @@ import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
+
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 // mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
@@ -130,6 +138,9 @@ public class MainActivity extends AppCompatActivity {
         OnActivated = settings.getBoolean("OnActivated", false);
         FirstActivated = settings.getBoolean("FirstActivated", true);
 
+        context = this.getBaseContext();
+        checkPermissions();
+
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
     }
@@ -165,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
         if (requestCode == 0){
             if (resultCode == RESULT_OK) {
                 GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
@@ -175,6 +186,12 @@ public class MainActivity extends AppCompatActivity {
             } else showToast("설정 저장 실패", true);
         Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
     }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+//    }
+
 
     @Override
     protected void onStart() {
@@ -335,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
+    private View layoutProgress; // class 이름
     private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
     private PointView viewPoint;

@@ -42,4 +42,26 @@ dependencies {
     implementation project(':libgaze-release')
     implementation project(':gazetracker-release')
     implementation 'gun0912.ted:tedpermission:2.0.0'
+<<<<<<< HEAD
 }
+=======
+<<<<<<< HEAD
+
+}
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+=======
+}
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+dependencies {
+    implementation 'com.squareup:otto:+'
+}
+dependencies {
+    implementation 'com.jakewharton:butterknife:10.2.3'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
+}
+>>>>>>> temp
+>>>>>>> 1c2535139e1a9e78e7d00927023a5b04825b7aab
