@@ -26,6 +26,21 @@ import com.example.eyepedia.EventBus;
 import com.example.eyepedia.KeySets;
 import com.example.eyepedia.Menu_papago;
 import com.example.eyepedia.R;
+import com.example.eyepedia.lakuepopupactivity.PopupActivity;
+import com.example.eyepedia.lakuepopupactivity.PopupGravity;
+import com.example.eyepedia.lakuepopupactivity.PopupType;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.text.BreakIterator;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
@@ -38,10 +53,10 @@ public class TextFragment extends Fragment  {
     private static final String TAG = TextFragment.class.getSimpleName();
     private TextView textView;
 
-    private static final int PICK_PDF_FILE = 2;
     private final static int OPEN_DIRECTORY_REQUEST_CODE = 1000;
 
     private String result;
+    Button btn_show_popup2;
 
     public TextFragment() {
         // Required empty public constructor
@@ -104,7 +119,9 @@ public class TextFragment extends Fragment  {
         });
 
         return view;
+
     }
+
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
