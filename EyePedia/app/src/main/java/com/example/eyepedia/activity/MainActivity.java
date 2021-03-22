@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,6 +34,10 @@ import com.example.eyepedia.ActivityResultEvent;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
+import com.example.eyepedia.lakuepopupactivity.PopupActivity;
+import com.example.eyepedia.lakuepopupactivity.PopupGravity;
+import com.example.eyepedia.lakuepopupactivity.PopupResult;
+import com.example.eyepedia.lakuepopupactivity.PopupType;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
@@ -61,7 +66,7 @@ import camp.visual.gazetracker.util.ViewLayoutChecker;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
-// mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
+// Mainactivity는 AppCompatActivity~에서 확장(상속 : extends)시켜서 쓰는 것
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -77,47 +82,15 @@ public class MainActivity extends AppCompatActivity {
     private final ViewLayoutChecker viewLayoutChecker = new ViewLayoutChecker();
     private HandlerThread backgroundThread = new HandlerThread("background");
     private Handler backgroundHandler;
-    private ImageView imageView;
 
-
-
-    Context context;
-
-    PermissionListener permissionlistener = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() {
-            initView(); // 권한이 승인되었을 때 실행할 함수
-        }
-
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-            Toast.makeText(MainActivity.this, "권한 허용을 하지 않으면 서비스를 이용할 수 없습니다.", Toast.LENGTH_SHORT).show();
-        }
-    };
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
-            TedPermission.with(this)
-                    .setPermissionListener(permissionlistener)
-                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
-                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
-                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.READ_CONTACTS
-                    })
-                    .check();
-
-        } else { initView();}
-    }
-
-
-    //private GazeTracker gazeTracker;
+    // popup
+    Button btn_show_popup2;
 
     // override는 app~에서 있는 함수를 업데이트해서 쓰는 것
+    // 앱이 켜짐으로써 시작되는 함수
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
         //gazeTrackerManager = GazeTrackerManager.makeNewInstance(this);
 
@@ -135,11 +108,25 @@ public class MainActivity extends AppCompatActivity {
         InitStatus = settings.getBoolean("InitStatus", true);
 
         context = this.getBaseContext();
-        checkPermissions();
 
         setOffsetOfView();
-    }
 
+        // 팝업 버튼 정의의
+       btn_show_popup2 = findViewById(R.id.btn_show_popup2);
+       btn_show_popup2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+                intent.putExtra("type", PopupType.SELECT);
+                intent.putExtra("gravity", PopupGravity.LEFT);
+                intent.putExtra("title", "공지사항");
+                intent.putExtra("content", "Did Lakue make a Popup Activity?");
+                intent.putExtra("buttonLeft", "예");
+                intent.putExtra("buttonRight", "아니오");
+                startActivityForResult(intent, 2);
+            }
+       });
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -168,22 +155,97 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-        if (requestCode == 0){
-            if (resultCode == RESULT_OK) {
-                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
-                InitStatus = data.getBooleanExtra("InitStatus", true);
-            } else showToast("설정 저장 실패", true);
-        }
-    }
 //    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 //        super.onActivityResult(requestCode, resultCode, data);
 //        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+//        if (requestCode == 0){
+//            if (resultCode == RESULT_OK) {
+//                GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
+//                InitStatus = data.getBooleanExtra("InitStatus", true);
+//            } else showToast("설정 저장 실패", true);
+//        }
 //    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
+        if (resultCode == RESULT_OK) {
+            //데이터 받기
+            if(requestCode == 1){
+                PopupResult result = (PopupResult) data.getSerializableExtra("result");
+                if(result == PopupResult.CENTER){
+                    // 작성 코드
+                    Toast.makeText(this, "CENTER", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if(requestCode == 2){
+                PopupResult result = (PopupResult) data.getSerializableExtra("result");
+                if(result == PopupResult.LEFT){
+                    // 작성 코드
+                    Toast.makeText(this, "LEFT", Toast.LENGTH_SHORT).show();
+
+                } else if(result == PopupResult.RIGHT){
+                    // 작성 코드
+                    Toast.makeText(this, "RIGHT", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+            if(requestCode == 3){
+                PopupResult result = (PopupResult) data.getSerializableExtra("result");
+                if(result == PopupResult.CENTER){
+                    // 작성 코드
+                    Toast.makeText(this, "CENTER", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+            if(requestCode == 4){
+                PopupResult result = (PopupResult) data.getSerializableExtra("result");
+                if(result == PopupResult.LEFT){
+                    // 작성 코드
+                    Toast.makeText(this, "LEFT", Toast.LENGTH_SHORT).show();
+
+                } else if(result == PopupResult.RIGHT){
+                    // 작성 코드
+                    Toast.makeText(this, "RIGHT", Toast.LENGTH_SHORT).show();
+
+                } else if(result == PopupResult.IMAGE){
+                    // 작성 코드
+                    Toast.makeText(this, "IMAGE", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        }
+    }
+
+    // 저장 권한
+    Context context;
+    PermissionListener permissionlistener = new PermissionListener() {
+        @Override
+        public void onPermissionGranted() {
+            Toast.makeText(MainActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+            Toast.makeText(MainActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+        }
+    };
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= 23){ // 마시멜로(안드로이드 6.0) 이상 권한 체크
+            TedPermission.with(this)
+                    .setPermissionListener(permissionlistener)
+                    .setRationaleMessage("이미지를 다루기 위해서는 접근 권한이 필요합니다")
+                    .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다...\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                    .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_CONTACTS
+                    })
+                    .check();
+
+        } else { initView();}
+    }
 
 
     @Override
@@ -337,7 +399,6 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout textLayout;
     private View layoutProgress; // class 이름
     private CoordinatorLayout backgroundLayout;
-    private View layoutProgress;
     private PointView viewPoint;
     private TextView translatedText;
     private CalibrationViewer viewCalibration;
