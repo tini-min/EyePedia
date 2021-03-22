@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,6 +34,9 @@ import com.example.eyepedia.ActivityResultEvent;
 import com.example.eyepedia.EventBus;
 import com.example.eyepedia.R;
 import com.example.eyepedia.calibration.CalibrationDataStorage;
+import com.example.eyepedia.lakuepopupactivity.PopupActivity;
+import com.example.eyepedia.lakuepopupactivity.PopupGravity;
+import com.example.eyepedia.lakuepopupactivity.PopupType;
 import com.example.eyepedia.view.CalibrationViewer;
 import com.example.eyepedia.view.GazePathView;
 import com.example.eyepedia.view.PointView;
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     PermissionListener permissionlistener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
+            Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
             initView(); // 권한이 승인되었을 때 실행할 함수
         }
 
@@ -137,6 +142,21 @@ public class MainActivity extends AppCompatActivity {
         checkPermissions();
 
         setOffsetOfView();
+        Button btn_show_popup2;
+        btn_show_popup2 = findViewById(R.id.btn_show_popup2);
+        btn_show_popup2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), PopupActivity.class);
+                intent.putExtra("type", PopupType.SELECT);
+                intent.putExtra("gravity", PopupGravity.LEFT);
+                intent.putExtra("title", "공지사항");
+                intent.putExtra("content", "Did Lakue make a Popup Activity?");
+                intent.putExtra("buttonLeft", "예");
+                intent.putExtra("buttonRight", "아니오");
+                startActivityForResult(intent, 2);
+            }
+        });
     }
 
     @Override

@@ -39,6 +39,9 @@ import com.example.eyepedia.EventBus;
 import com.example.eyepedia.KeySets;
 import com.example.eyepedia.R;
 import com.example.eyepedia.Menu_papago;
+import com.example.eyepedia.lakuepopupactivity.PopupActivity;
+import com.example.eyepedia.lakuepopupactivity.PopupGravity;
+import com.example.eyepedia.lakuepopupactivity.PopupType;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -108,6 +111,7 @@ public class TextFragment extends Fragment  {
 //    private Button translationButton;
     private TextView resultText;
     private String result;
+    Button btn_show_popup2;
 
     public TextFragment() {
         // Required empty public constructor
@@ -156,6 +160,7 @@ public class TextFragment extends Fragment  {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_text, container, false);
+        btn_show_popup2 = view.findViewById(R.id.btn_show_popup2);
 
 
 
@@ -176,7 +181,9 @@ public class TextFragment extends Fragment  {
             }
         });
         return view;
+
     }
+
 
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);

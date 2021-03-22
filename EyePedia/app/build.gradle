@@ -48,4 +48,10 @@ dependencies {
     implementation 'com.squareup:otto:+'
     implementation 'com.jakewharton:butterknife:10.2.3'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
+    implementation 'com.github.lakue119:LakuePopupActivity:1.0.1'
+}
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
 }

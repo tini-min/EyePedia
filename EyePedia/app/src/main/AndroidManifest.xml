@@ -31,7 +31,7 @@
             android:permission="android.permission.MANAGE_DOCUMENTS">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+<!--                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />-->
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
