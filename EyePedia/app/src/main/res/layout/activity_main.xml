@@ -20,6 +20,14 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/Theme.EyePedia.PopupOverlay" />
 
+        <TextView
+            android:id="@+id/translated_text"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:text="번역할 문장을 주시해 주세요!" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
@@ -52,7 +60,5 @@
         layout="@layout/layout_progress"
         app:layout_anchor="@+id/preview"
         app:layout_anchorGravity="center" />
-
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
