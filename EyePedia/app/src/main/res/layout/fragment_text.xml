@@ -32,7 +32,6 @@
                 android:bufferType="spannable"
                 android:lineSpacingExtra="20dp"
                 android:padding="30dp"
-
                 android:breakStrategy="high_quality"
                 android:hyphenationFrequency="full"
                 android:text="The three little pigs build new houses. The first little pig builds a house of straw. The second little pig builds a house of wood. The house is pretty. He likes it very much. The third little pig builds a house of bricks. He is happy. One day, a big bad wolf goes to the house of straw. He wants to eat the first little pig. The wolf huffs and puffs. He blows the house down. The first little pig runs to the house of wood. The wolf goes to the house of wood. He wants to eat the pigs. The wolf huffs and puffs. He blows the house down. The two little pigs run to the house of bricks. They knock on the door. The wolf goes to the house of bricks. He huffs and puffs. His face turns red. He huffs again. But the house is still. The wolf climbs up on the roof. The third little pig is making soup. The soup is hot. The wolf jumps down the chimney. Splash! He falls in the hot soup. The third little pig eats the soup. It is good."
@@ -51,7 +50,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

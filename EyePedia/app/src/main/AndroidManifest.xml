@@ -38,14 +38,10 @@
 
         <activity
             android:name=".activity.SettingActivity"
-<<<<<<< HEAD
             android:label="Settings"/>
         <activity
             android:name=".activity.SubActivity"
             android:label="SubActivity"
             />
-=======
-            android:label="@string/action_settings" />
->>>>>>> temp
     </application>
 </manifest>

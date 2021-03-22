@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
@@ -16,8 +17,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,8 +39,13 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import com.google.android.material.appbar.AppBarLayout;
 
 import camp.visual.gazetracker.GazeTracker;
 import camp.visual.gazetracker.callback.CalibrationCallback;
@@ -58,9 +62,6 @@ import camp.visual.gazetracker.state.EyeMovementState;
 import camp.visual.gazetracker.state.ScreenState;
 import camp.visual.gazetracker.state.TrackingState;
 import camp.visual.gazetracker.util.ViewLayoutChecker;
-
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
 
 // mainactivity는 app~에서 확장(상속)시켜서 쓰는 것
 
@@ -182,16 +183,35 @@ public class MainActivity extends AppCompatActivity {
                 GazeViewStatus = data.getBooleanExtra("GazeViewStatus", false);
                 TranslateStatus = data.getBooleanExtra("TranslateStatus", true);
                 InitStatus = data.getBooleanExtra("InitStatus", true);
-                }
-            } else showToast("설정 저장 실패", true);
+                } else showToast("설정 저장 실패", true);
+            } else {
+            TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
+            textFragment.setTextView(ReadTextFile(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + data.getData().getPath().substring(18)));
+        }
+
         Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
     }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-//    }
 
+    public String ReadTextFile(String path){
+        StringBuffer strBuffer = new StringBuffer();
+        try{
+            InputStream is = new FileInputStream(path);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line="";
+            while((line=reader.readLine())!=null) {
+                strBuffer.append(line + "\n");
+            }
+            reader.close();
+            is.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "FileError";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Error";
+        }
+        return strBuffer.toString();
+    }
 
     @Override
     protected void onStart() {
@@ -352,9 +372,8 @@ public class MainActivity extends AppCompatActivity {
     // permission end
 
     //view
-    private View layoutProgress; // class 이름
-    private CoordinatorLayout backgroundLayout;
     private View layoutProgress;
+    private CoordinatorLayout backgroundLayout;
     private PointView viewPoint;
     private TextView translatedText;
     private CalibrationViewer viewCalibration;
