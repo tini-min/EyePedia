@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
-    private static boolean GazeViewStatus, InitStatus, OnActivated, FirstActivated;
+    private static boolean GazeViewStatus, InitStatus, OnActivated, BtnActivated;
     public static boolean TranslateStatus;
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
@@ -114,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
         TranslateStatus = settings.getBoolean("TranslateStatus", true);
         InitStatus = settings.getBoolean("InitStatus", true);
         OnActivated = settings.getBoolean("OnActivated", false);
-        FirstActivated = settings.getBoolean("FirstActivated", true);
+        BtnActivated = settings.getBoolean("BtnActivated", false);
+        //FirstActivated = settings.getBoolean("FirstActivated", true);
 
         setOffsetOfView();
         Log.i(TAG, "OnCreate");
@@ -165,11 +166,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 default :
-                    if (getIntent().getBooleanExtra("Clicked", false)){
+                    if (getIntent().getBooleanExtra("Clicked", false) && !BtnActivated){
                         showToast( "OnClicked", true);
                         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
                         TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
                         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
+                        BtnActivated = !BtnActivated;
                     } else {
                         TextFragment textFragment = (TextFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_text);
                         textFragment.setTextView(ReadTextFile(data.getData()));
@@ -218,7 +220,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (getIntent().getBooleanExtra("ActiveCalibration", false)) {
+        if (getIntent().getBooleanExtra("ActiveCalibration", false) && !BtnActivated) {
+            BtnActivated = !BtnActivated;
+
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putBoolean("BtnActivated", BtnActivated);
+
             Intent intent = new Intent(getBaseContext(), PopupActivity.class);
             intent.putExtra("type", PopupType.NORMAL);
             intent.putExtra("gravity", PopupGravity.CENTER);
@@ -250,6 +258,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("InitStatus", InitStatus);
         editor.putBoolean("OnActivated", false);
         editor.putBoolean("FirstActivated", false);
+        editor.putBoolean("BtnActivated", false);
 
         editor.commit();
 
@@ -379,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
     private AppBarLayout menuBar;
     private GazePathView gazePathView;
     private boolean isUseGazeFilter = true;
-    private CalibrationModeType calibrationType = CalibrationModeType.DEFAULT;
+    private CalibrationModeType calibrationType = CalibrationModeType.ONE_POINT;
 
     private void initView() {
         backgroundLayout = findViewById(R.id.layout_background);
