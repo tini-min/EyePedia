@@ -37,6 +37,8 @@ public class SettingActivity extends AppCompatActivity {
     private boolean reset = false;
     public static Activity SetActivity;
 
+    public static MainActivity.RequestCode RequestCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +59,6 @@ public class SettingActivity extends AppCompatActivity {
         GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
         TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
         InitStatus = getIntent().getBooleanExtra("InitStatus", true);
-        //Log.i(TAG, String.valueOf(GazeViewStatus) + " / " + InitStatus);
         Log.i(TAG, "onStart");
     }
 
