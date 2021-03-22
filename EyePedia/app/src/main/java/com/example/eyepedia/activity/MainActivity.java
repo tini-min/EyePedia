@@ -337,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout textLayout;
     private View layoutProgress; // class 이름
     private CoordinatorLayout backgroundLayout;
-    private View layoutProgress;
     private PointView viewPoint;
     private TextView translatedText;
     private CalibrationViewer viewCalibration;
