@@ -105,8 +105,6 @@ public class TextFragment extends Fragment  {
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         for (int i = 0; i < indArray.size() - 1; i++) {
             int finalI = i;
-            Log.i(TAG, String.valueOf(content.length()) + " / " + indArray.get(finalI) + " / " + indArray.get(finalI+1));
-            Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
