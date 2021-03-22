@@ -480,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
             if (gazeTracker != null) {
                 initSuccess(gazeTracker);
                 if (InitStatus && !OnActivated) {
-                    //startCalibration();
+                    startCalibration();
                     OnActivated = true;
                 }
             } else {
