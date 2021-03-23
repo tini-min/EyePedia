@@ -9,7 +9,6 @@ import android.text.Spannable;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -105,8 +104,6 @@ public class TextFragment extends Fragment  {
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         for (int i = 0; i < indArray.size() - 1; i++) {
             int finalI = i;
-            Log.i(TAG, String.valueOf(content.length()) + " / " + indArray.get(finalI) + " / " + indArray.get(finalI+1));
-            Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
             spannable.setSpan(new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
@@ -128,7 +125,6 @@ public class TextFragment extends Fragment  {
                             }
                         }
                     }.start();
-                    Log.i(TAG, content.substring(indArray.get(finalI), indArray.get(finalI + 1)));
                 }
             }, indArray.get(finalI), indArray.get(finalI + 1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
