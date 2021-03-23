@@ -256,8 +256,6 @@ public class SettingActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(View v) {
                                         InfoPopup.dismiss();
-                                        startActivity(intent);
-                                        finish();
                                     }
                                 });
                                 Log.i(TAG + "onActivityResult", String.valueOf(GazeViewStatus) + " / " + TranslateStatus + " / " + InitStatus);
