@@ -69,7 +69,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] PERMISSIONS = new String[]
             {Manifest.permission.CAMERA};
     private static final int REQ_PERMISSION = 1000;
-    private static boolean GazeViewStatus, InitStatus, OnActivated, BtnActivated;
+
+    // 개인변수
+    private static boolean GazeViewStatus, InitStatus, OnActivated, BtnActivated; // 설정 저장 변수
     public static boolean TranslateStatus;
     public static final String PREFS_NAME = "setup";
     Long pressedTime = null;
@@ -99,8 +101,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Log.i(TAG, "GazeTracker Version: " + GazeTracker.getVersionName());
-        checkPermission();
         initView();
+        checkPermission();
         initHandler();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -117,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
         BtnActivated = settings.getBoolean("BtnActivated", false);
         //FirstActivated = settings.getBoolean("FirstActivated", true);
 
-        setOffsetOfView();
         Log.i(TAG, "OnCreate");
     }
 
@@ -205,15 +206,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        initView();
-        startTracking();
+
         // 설정 번경시 변경된 변수 받기
         if (getIntent().getBooleanExtra("Clicked", false)){
             GazeViewStatus = getIntent().getBooleanExtra("GazeViewStatus", false);
             TranslateStatus = getIntent().getBooleanExtra("TranslateStatus", true);
             InitStatus = getIntent().getBooleanExtra("InitStatus", true);
         }
-        translatedText.setText("번역할 문장을 주시해 주세요!");
+
         Log.i(TAG, "onStart");
     }
 
@@ -236,19 +236,18 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intent, RequestCode.Popup_Normal);
         }
         Log.i(TAG, "onResume");
+        setOffsetOfView();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        stopTracking();
         Log.i(TAG, "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        stopTracking();
 
         // 종료 시 설정 변수 저장
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -388,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
     private AppBarLayout menuBar;
     private GazePathView gazePathView;
     private boolean isUseGazeFilter = true;
-    private CalibrationModeType calibrationType = CalibrationModeType.ONE_POINT;
+    private CalibrationModeType calibrationType = CalibrationModeType.FIVE_POINT;
 
     private void initView() {
         backgroundLayout = findViewById(R.id.layout_background);
@@ -401,6 +400,7 @@ public class MainActivity extends AppCompatActivity {
         menuBar = findViewById(R.id.menu_bar);
 
         translatedText = findViewById(R.id.translated_text);
+        translatedText.setText("번역할 문장을 주시해 주세요!");
 
         gazePathView.setVisibility((GazeViewStatus)? View.VISIBLE : View.INVISIBLE);
 
